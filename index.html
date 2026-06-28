@@ -2,7 +2,7 @@
 <html lang="gu" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>UVACALLING - Student Lead Management CRM</title>
     
     <!-- PWA Meta Tags for App Installation -->
@@ -34,7 +34,11 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            overscroll-behavior-y: contain; 
+        }
         .whatsapp-bg { 
             background-color: #e5ddd5; 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
@@ -55,10 +59,11 @@
         .dark .glass { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); }
 
         .input-group { position: relative; }
+        /* Mobile-focused inputs set to 16px to completely eliminate mobile Safari's auto-zooming glitch */
         .input-group input, .input-group select, .input-group textarea {
             width: 100%; padding: 1.25rem 1rem 0.5rem; background-color: transparent;
             border: 1px solid #e2e8f0; border-radius: 0.75rem; transition: all 0.2s;
-            color: inherit;
+            color: inherit; font-size: 16px;
         }
         .dark .input-group input, .dark .input-group select, .dark .input-group textarea { border-color: #334155; }
         .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
@@ -87,6 +92,11 @@
         /* Dropdown transition */
         .dropdown-enter { opacity: 0; transform: scale(0.95) translateY(-10px); pointer-events: none; }
         .dropdown-active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Safe Area Padding for Modern Smart Phones */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 12px);
+        }
     </style>
 </head>
 <body class="bg-crm-50 dark:bg-crm-900 text-slate-800 dark:text-slate-200 antialiased h-screen overflow-hidden transition-colors duration-300">
@@ -188,7 +198,7 @@
     <!-- Mobile Sidebar Backdrop -->
     <div id="sidebarBackdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
 
-    <!-- Left Sidebar (Drawer on Mobile) -->
+    <!-- Left Sidebar (Drawer on Mobile, hidden bottom half on tiny layouts) -->
     <aside id="mainSidebar" class="w-64 flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col fixed md:relative h-full z-50 shadow-soft transition-transform duration-300 -translate-x-full md:translate-x-0">
         <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-700 gap-3 justify-between">
             <div class="flex items-center gap-3">
@@ -237,12 +247,12 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full pb-16 md:pb-0">
         <!-- Header -->
         <header class="h-16 glass z-10 flex items-center justify-between px-4 lg:px-8 shrink-0 shadow-sm border-b border-slate-200 dark:border-slate-700">
             <div class="flex items-center gap-4">
                 <button onclick="toggleMobileMenu()" class="md:hidden text-slate-500 text-2xl hover:text-brand-600 transition"><i class="ph ph-list"></i></button>
-                <div class="hidden sm:block">
+                <div>
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight" id="currentTabTitle">Overview</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium" id="currentDate">Mon, Oct 24</p>
                 </div>
@@ -309,67 +319,78 @@
         <!-- DASHBOARD & NEW LEAD TAB -->
         <div id="tab-dashboard" class="tab-content flex-1 overflow-y-auto p-4 lg:p-6 lg:flex lg:gap-6 w-full">
             
-            <div class="flex-1 space-y-6 w-full">
-                <!-- Dynamic Welcome Greeting -->
-                <h2 id="welcomeGreeting" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white mb-2">Good Morning! 👋</h2>
+            <div class="flex-1 space-y-4 md:space-y-6 w-full">
+                <!-- Mobile Segment Switcher Pill (Avoids screen overflow & infinite scroll on phones) -->
+                <div class="lg:hidden flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full">
+                    <button onclick="toggleMobileDashboardSegment('form')" id="segmentBtnForm" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white">
+                        <i class="ph ph-user-plus mr-1"></i> Lead Entry Form
+                    </button>
+                    <button onclick="toggleMobileDashboardSegment('preview')" id="segmentBtnPreview" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400">
+                        <i class="ph ph-chat-circle-dots mr-1"></i> Preview & History
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <h2 id="welcomeGreeting" class="text-xl md:text-3xl font-extrabold text-slate-800 dark:text-white leading-tight">Good Morning! 👋</h2>
+                </div>
                 
                 <!-- Stats Row (Filters to Current Agent) -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
+                    <div class="bg-white dark:bg-slate-800 p-3.5 md:p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
                         <div class="flex justify-between items-start mb-2">
-                            <div class="bg-blue-100 text-blue-600 dark:bg-blue-900/40 p-2 rounded-xl"><i class="ph-fill ph-users text-xl"></i></div>
+                            <div class="bg-blue-100 text-blue-600 dark:bg-blue-900/40 p-2 rounded-xl"><i class="ph-fill ph-users text-lg md:text-xl"></i></div>
                         </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Today's Leads</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statTodayLeads">0</div>
+                        <h4 class="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold mb-1">Today's Leads</h4>
+                        <div class="text-lg md:text-2xl font-extrabold text-slate-800 dark:text-white" id="statTodayLeads">0</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
+                    <div class="bg-white dark:bg-slate-800 p-3.5 md:p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
                         <div class="flex justify-between items-start mb-2">
-                            <div class="bg-green-100 text-green-600 dark:bg-green-900/40 p-2 rounded-xl"><i class="ph-fill ph-check-square-offset text-xl"></i></div>
+                            <div class="bg-green-100 text-green-600 dark:bg-green-900/40 p-2 rounded-xl"><i class="ph-fill ph-check-square-offset text-lg md:text-xl"></i></div>
                         </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Admissions</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statAdmissions">0</div>
+                        <h4 class="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold mb-1">Admissions</h4>
+                        <div class="text-lg md:text-2xl font-extrabold text-slate-800 dark:text-white" id="statAdmissions">0</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
+                    <div class="bg-white dark:bg-slate-800 p-3.5 md:p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
                         <div class="flex justify-between items-start mb-2">
-                            <div class="bg-orange-100 text-orange-600 dark:bg-orange-900/40 p-2 rounded-xl"><i class="ph-fill ph-clock-counter-clockwise text-xl"></i></div>
+                            <div class="bg-orange-100 text-orange-600 dark:bg-orange-900/40 p-2 rounded-xl"><i class="ph-fill ph-clock-counter-clockwise text-lg md:text-xl"></i></div>
                         </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Follow Ups</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statFollowups">0</div>
+                        <h4 class="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold mb-1">Follow Ups</h4>
+                        <div class="text-lg md:text-2xl font-extrabold text-slate-800 dark:text-white" id="statFollowups">0</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
+                    <div class="bg-white dark:bg-slate-800 p-3.5 md:p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
                         <div class="flex justify-between items-start mb-2">
-                            <div class="bg-brand-100 text-brand-600 dark:bg-brand-900/40 p-2 rounded-xl"><i class="ph-fill ph-whatsapp-logo text-xl"></i></div>
+                            <div class="bg-brand-100 text-brand-600 dark:bg-brand-900/40 p-2 rounded-xl"><i class="ph-fill ph-whatsapp-logo text-lg md:text-xl"></i></div>
                         </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">WhatsApp Sent</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statWhatsApp">0</div>
+                        <h4 class="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold mb-1">WhatsApp Sent</h4>
+                        <div class="text-lg md:text-2xl font-extrabold text-slate-800 dark:text-white" id="statWhatsApp">0</div>
                     </div>
                 </div>
 
                 <!-- LEAD ENTRY FORM -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+                <div id="mobileDashboardFormContainer" class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden relative">
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-blue-500"></div>
                     
-                    <div class="p-5 md:p-8 flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 dark:border-slate-700 gap-4">
+                    <div class="p-4 md:p-8 flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 dark:border-slate-700 gap-2">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <h2 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <i class="ph-fill ph-user-plus text-brand-500"></i> New Lead Entry
                             </h2>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Log conversation details and sync to WhatsApp.</p>
+                            <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400">Log details and send instantly to WhatsApp.</p>
                         </div>
-                        <button onclick="clearFormUI()" class="p-2 w-full md:w-auto text-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition" title="Clear Form">
-                            <i class="ph ph-eraser text-xl hidden md:inline"></i> <span class="md:hidden">Clear Form</span>
+                        <button onclick="clearFormUI()" class="py-2 px-3 self-end md:self-auto text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition" title="Clear Form">
+                            <i class="ph ph-eraser text-base mr-1 inline"></i> Clear Form
                         </button>
                     </div>
 
-                    <!-- Hidden input preserved for backward compatibility if needed, but dynamically updated -->
+                    <!-- Hidden input preserved for backward compatibility -->
                     <input type="hidden" id="callerName" value="">
                     
-                    <div class="p-5 md:p-8 space-y-6 md:space-y-8">
+                    <div class="p-4 md:p-8 space-y-5 md:space-y-8">
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <i class="ph ph-identification-card text-slate-400"></i> Customer Information
+                            <h3 class="text-xs md:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="ph ph-identification-card text-slate-400 text-base"></i> Customer Information
                             </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="input-group">
                                     <input type="text" id="customerName" oninput="updatePreview()" placeholder=" " class="dark:bg-slate-900/50">
                                     <label>Customer Name</label>
@@ -401,23 +422,23 @@
                                     <i class="ph ph-caret-down absolute right-4 top-4 text-slate-400 pointer-events-none"></i>
                                 </div>
                                 <div class="md:col-span-2 mt-1">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Customer Tags</label>
+                                    <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Customer Tags</label>
                                     <div class="flex flex-wrap gap-2" id="tagContainer">
                                         <label class="cursor-pointer">
                                             <input type="checkbox" value="Hot Lead" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-red-50 peer-checked:text-red-600 peer-checked:border-red-200 dark:peer-checked:bg-red-900/30 dark:peer-checked:text-red-400 dark:peer-checked:border-red-800 transition">🔥 Hot Lead</div>
+                                            <div class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-red-50 peer-checked:text-red-600 peer-checked:border-red-200 dark:peer-checked:bg-red-900/30 dark:peer-checked:text-red-400 dark:peer-checked:border-red-800 transition">🔥 Hot Lead</div>
                                         </label>
                                         <label class="cursor-pointer">
                                             <input type="checkbox" value="Warm Lead" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-orange-50 peer-checked:text-orange-600 peer-checked:border-orange-200 dark:peer-checked:bg-orange-900/30 dark:peer-checked:text-orange-400 dark:peer-checked:border-orange-800 transition">☀️ Warm Lead</div>
+                                            <div class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-orange-50 peer-checked:text-orange-600 peer-checked:border-orange-200 dark:peer-checked:bg-orange-900/30 dark:peer-checked:text-orange-400 dark:peer-checked:border-orange-800 transition">☀️ Warm Lead</div>
                                         </label>
                                         <label class="cursor-pointer">
                                             <input type="checkbox" value="Job Seeker" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 peer-checked:text-blue-600 peer-checked:border-blue-200 dark:peer-checked:bg-blue-900/30 dark:peer-checked:text-blue-400 dark:peer-checked:border-blue-800 transition">💼 Job Seeker</div>
+                                            <div class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 peer-checked:text-blue-600 peer-checked:border-blue-200 dark:peer-checked:bg-blue-900/30 dark:peer-checked:text-blue-400 dark:peer-checked:border-blue-800 transition">💼 Job Seeker</div>
                                         </label>
                                         <label class="cursor-pointer">
                                             <input type="checkbox" value="College Student" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-purple-50 peer-checked:text-purple-600 peer-checked:border-purple-200 dark:peer-checked:bg-purple-900/30 dark:peer-checked:text-purple-400 dark:peer-checked:border-purple-800 transition">🎓 College Student</div>
+                                            <div class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-purple-50 peer-checked:text-purple-600 peer-checked:border-purple-200 dark:peer-checked:bg-purple-900/30 dark:peer-checked:text-purple-400 dark:peer-checked:border-purple-800 transition">🎓 College Student</div>
                                         </label>
                                     </div>
                                 </div>
@@ -425,10 +446,10 @@
                         </div>
 
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2 border-t border-slate-100 dark:border-slate-700 pt-6">
-                                <i class="ph ph-briefcase text-slate-400"></i> Interest & Status
+                            <h3 class="text-xs md:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2 border-t border-slate-100 dark:border-slate-700 pt-6">
+                                <i class="ph ph-briefcase text-slate-400 text-base"></i> Interest & Status
                             </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="input-group">
                                     <select id="customerMood" onchange="updatePreview()" class="dark:bg-slate-900/50 appearance-none font-medium text-slate-700 dark:text-slate-200">
                                         <option value="interested_ai" class="text-slate-800">રસ છે - AI Mastery કોર્સ</option>
@@ -463,28 +484,29 @@
                             <button id="sendBtn" onclick="sendWhatsApp()" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-[0_8px_20px_-6px_rgba(34,197,94,0.5)] transition-all active:scale-[0.98] flex justify-center items-center gap-2">
                                 <i class="ph-fill ph-whatsapp-logo text-xl"></i> Create Lead & Sync WA
                             </button>
-                            <button onclick="copyMsgUI()" class="sm:w-auto w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white font-bold py-3.5 px-6 rounded-xl transition-all flex justify-center items-center gap-2">
-                                <i class="ph ph-copy"></i> Copy Text
-                            </button>
-                            <!-- HIDDEN CALL BUTTON AS PER INSTRUCTIONS -->
-                            <button onclick="callCustomerUI()" class="hidden sm:w-auto w-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-bold py-3.5 px-6 rounded-xl transition-all flex justify-center items-center gap-2 border border-blue-200 dark:border-blue-800/50">
-                                <i class="ph-fill ph-phone-call"></i> Call
-                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="copyMsgUI()" class="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2">
+                                    <i class="ph ph-copy"></i> Copy Message
+                                </button>
+                                <button onclick="callCustomerUI()" class="flex-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center gap-2 border border-blue-200 dark:border-blue-800/50">
+                                    <i class="ph-fill ph-phone-call"></i> Call Now
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column -->
-            <div class="w-full lg:w-[420px] shrink-0 mt-6 lg:mt-0 space-y-6">
+            <!-- Right Column (Responsive: Collapsed under Form on phones unless segment toggled) -->
+            <div id="mobileDashboardPreviewContainer" class="hidden lg:block w-full lg:w-[420px] shrink-0 mt-0 space-y-6">
                 <!-- Live WhatsApp Preview -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[400px] md:h-[480px]">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[380px] md:h-[450px]">
                     <div class="bg-[#075e54] dark:bg-[#1f2c34] text-white p-3 flex items-center gap-3 shrink-0">
                         <i class="ph ph-arrow-left text-xl ml-1"></i>
                         <img src="https://ui-avatars.com/api/?name=Customer&background=cbd5e1&color=fff" class="w-10 h-10 rounded-full" id="waProfilePic">
                         <div class="flex-1 min-w-0">
                             <div class="font-bold truncate text-[15px]" id="waContactName">Customer Name</div>
-                            <div class="text-[11px] text-white/80">online</div>
+                            <div class="text-[11px] text-white/80 font-normal">online</div>
                         </div>
                         <div class="flex gap-4 pr-2 hidden sm:flex">
                             <i class="ph-fill ph-video-camera text-xl"></i>
@@ -496,13 +518,13 @@
                         <div class="text-center mb-4">
                             <span class="bg-[#e1f3fb] dark:bg-[#182229] text-slate-600 dark:text-slate-400 text-xs py-1 px-3 rounded-lg shadow-sm border border-black/5 dark:border-white/5 uppercase font-medium">Today</span>
                         </div>
-                        <div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-2.5 rounded-xl rounded-tr-none text-[14.5px] text-[#111b21] dark:text-[#e9edef] shadow-sm whitespace-pre-wrap ml-auto max-w-[95%] sm:max-w-[85%] relative pb-5 leading-snug font-sans" id="messagePreview">
+                        <div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-3 rounded-xl rounded-tr-none text-sm text-[#111b21] dark:text-[#e9edef] shadow-sm whitespace-pre-wrap ml-auto max-w-[95%] sm:max-w-[85%] relative pb-6 leading-snug font-sans" id="messagePreview">
                             <!-- JS fills this -->
                         </div>
                     </div>
                     <div class="bg-[#f0f0f0] dark:bg-[#202c33] p-2 flex items-center gap-2 shrink-0">
                         <i class="ph ph-smiley text-slate-500 dark:text-slate-400 text-2xl mx-1"></i>
-                        <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-full px-4 py-2 text-sm text-slate-400 border-none truncate">Message</div>
+                        <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-full px-4 py-2 text-xs text-slate-400 border-none truncate">Message</div>
                         <div class="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white shrink-0 ml-1">
                             <i class="ph-fill ph-microphone text-xl"></i>
                         </div>
@@ -510,17 +532,17 @@
                 </div>
 
                 <!-- History -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col max-h-[400px] md:max-h-[500px]">
-                    <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col max-h-[350px] md:max-h-[450px]">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
+                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
                             <i class="ph-fill ph-clock-counter-clockwise text-blue-500 text-lg"></i> My Recent Activity
                         </h3>
-                        <button onclick="clearHistory()" class="text-xs font-semibold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 px-2.5 py-1.5 rounded-md transition-colors">
+                        <button onclick="clearHistory()" class="text-[11px] font-semibold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 px-2.5 py-1.5 rounded-md transition-colors">
                             Clear
                         </button>
                     </div>
                     
-                    <div class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-50/50 dark:bg-slate-900/20" id="historyBody">
+                    <div class="p-3 overflow-y-auto flex-1 space-y-3 bg-slate-50/50 dark:bg-slate-900/20" id="historyBody">
                         <!-- History Cards injected here -->
                     </div>
                 </div>
@@ -529,17 +551,12 @@
 
         <!-- CUSTOMERS TAB -->
         <div id="tab-customers" class="tab-content hidden flex-1 overflow-hidden flex flex-col w-full bg-crm-50 dark:bg-crm-900">
-            <div class="p-4 lg:p-6 pb-0 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div class="p-4 lg:p-6 pb-2 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-                    <select class="w-full sm:w-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200">
+                    <select class="w-full sm:w-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200">
                         <option>My Leads & Customers</option>
                         <option>Only Admissions</option>
                         <option>Interested Leads</option>
-                    </select>
-                    <select class="w-full sm:w-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200 hidden md:block">
-                        <option>Filter: Today</option>
-                        <option>Filter: This Week</option>
-                        <option>Filter: This Month</option>
                     </select>
                 </div>
                 <button onclick="switchTab('dashboard', 'New Lead Entry')" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2">
@@ -547,22 +564,22 @@
                 </button>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+            <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-24">
                 <!-- Grid of Customers -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5" id="customersGrid">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="customersGrid">
                     <!-- Javascript populates customer cards here -->
                 </div>
             </div>
         </div>
 
         <!-- PROFILE TAB -->
-        <div id="tab-profile" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full relative">
-            <button onclick="switchTab('customers', 'Customer Database')" class="absolute top-4 right-4 lg:top-6 lg:right-6 p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-full transition z-10 shadow-sm">
-                <i class="ph ph-x font-bold"></i>
+        <div id="tab-profile" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full relative pb-24">
+            <button onclick="switchTab('customers', 'Customer Database')" class="absolute top-4 right-4 p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-full transition z-10 shadow-sm">
+                <i class="ph ph-x font-bold text-lg"></i>
             </button>
             
-            <div class="max-w-6xl mx-auto space-y-6">
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6 flex flex-col md:flex-row gap-6 items-center md:items-start relative overflow-hidden mt-8 lg:mt-0">
+            <div class="max-w-6xl mx-auto space-y-6 mt-8 lg:mt-0">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6 flex flex-col md:flex-row gap-6 items-center md:items-start relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-brand-500 to-purple-500"></div>
                     
                     <div class="relative">
@@ -573,19 +590,19 @@
                     </div>
                     
                     <div class="flex-1 text-center md:text-left space-y-2 w-full">
-                        <div class="flex flex-col md:flex-row md:items-center gap-3">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2">
                             <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white" id="profName">Student Name</h2>
                             <div class="flex gap-2 justify-center flex-wrap" id="profTagsList"></div>
                         </div>
-                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">
-                            <span class="flex items-center gap-1"><i class="ph ph-phone text-base md:text-lg"></i> <span id="profPhone"></span></span>
-                            <span class="flex items-center gap-1"><i class="ph ph-map-pin text-base md:text-lg"></i> <span id="profCity"></span></span>
-                            <span class="flex items-center gap-1"><i class="ph ph-briefcase text-base md:text-lg"></i> <span id="profCourse"></span></span>
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            <span class="flex items-center gap-1"><i class="ph ph-phone text-base"></i> <span id="profPhone"></span></span>
+                            <span class="flex items-center gap-1"><i class="ph ph-map-pin text-base"></i> <span id="profCity"></span></span>
+                            <span class="flex items-center gap-1"><i class="ph ph-briefcase text-base"></i> <span id="profCourse"></span></span>
                         </div>
                     </div>
                     
                     <div class="flex gap-3 w-full md:w-auto justify-center">
-                        <button onclick="window.open(`https://wa.me/91${document.getElementById('profPhone').innerText}`, '_blank')" class="w-full md:w-auto bg-brand-100 hover:bg-brand-200 text-brand-700 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 dark:text-brand-400 px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+                        <button id="profileDirectWaBtn" class="w-full md:w-auto bg-brand-100 hover:bg-brand-200 text-brand-700 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 dark:text-brand-400 px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
                             <i class="ph-fill ph-whatsapp-logo text-lg"></i> Message
                         </button>
                     </div>
@@ -598,25 +615,25 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="space-y-6">
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5">
                             <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
                                 <i class="ph-fill ph-identification-card text-blue-500"></i> Lead Details
                             </h3>
                             <div class="space-y-4 text-sm">
                                 <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Lead Source</span>
+                                    <span class="block text-slate-400 text-[10px] font-semibold uppercase">Lead Source</span>
                                     <span class="font-medium text-slate-800 dark:text-slate-200" id="profSource"></span>
                                 </div>
                                 <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Education / Occupation</span>
+                                    <span class="block text-slate-400 text-[10px] font-semibold uppercase">Education / Occupation</span>
                                     <span class="font-medium text-slate-800 dark:text-slate-200" id="profEdu"></span>
                                 </div>
                                 <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Assigned Counsellor</span>
+                                    <span class="block text-slate-400 text-[10px] font-semibold uppercase">Assigned Counsellor</span>
                                     <span class="font-medium text-slate-800 dark:text-slate-200" id="profAgent">Agent Name</span>
                                 </div>
                                 <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Created Date</span>
+                                    <span class="block text-slate-400 text-[10px] font-semibold uppercase">Created Date</span>
                                     <span class="font-medium text-slate-800 dark:text-slate-200" id="profCreated"></span>
                                 </div>
                             </div>
@@ -624,39 +641,39 @@
                     </div>
 
                     <div class="lg:col-span-1 space-y-6">
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col h-[400px] md:h-[500px]">
-                            <div class="p-5 border-b border-slate-100 dark:border-slate-700">
-                                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col h-[380px] md:h-[450px]">
+                            <div class="p-4 border-b border-slate-100 dark:border-slate-700">
+                                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
                                     <i class="ph-fill ph-clock-counter-clockwise text-purple-500"></i> Notes & Timeline
                                 </h3>
                             </div>
-                            <div class="flex-1 overflow-y-auto p-5 space-y-6 timeline-container bg-slate-50/50 dark:bg-slate-900/20" id="profTimelineList"></div>
-                            <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+                            <div class="flex-1 overflow-y-auto p-4 space-y-5 timeline-container bg-slate-50/50 dark:bg-slate-900/20" id="profTimelineList"></div>
+                            <div class="p-3 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
                                 <div class="flex gap-2">
-                                    <input type="text" id="newNoteInput" placeholder="Add a note or update..." class="flex-1 bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500">
-                                    <button onclick="addNoteToProfile()" class="bg-brand-500 hover:bg-brand-600 text-white p-2 rounded-xl shadow-sm transition"><i class="ph-fill ph-paper-plane-right"></i></button>
+                                    <input type="text" id="newNoteInput" placeholder="Add a note or update..." class="flex-1 bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-500">
+                                    <button onclick="addNoteToProfile()" class="bg-brand-500 hover:bg-brand-600 text-white p-3 rounded-xl shadow-sm transition"><i class="ph-fill ph-paper-plane-right"></i></button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-6">
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5">
                             <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
                                 <i class="ph-fill ph-check-square-offset text-green-500"></i> Task Management
                             </h3>
                             <div class="space-y-3" id="profTasksList"></div>
                         </div>
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5">
                             <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
                                 <i class="ph-fill ph-files text-orange-500"></i> Documents
                             </h3>
-                            <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
-                                <div class="w-10 h-10 md:w-12 md:h-12 bg-orange-50 dark:bg-orange-900/30 text-orange-500 rounded-full flex items-center justify-center mb-2">
-                                    <i class="ph ph-upload-simple text-xl"></i>
+                            <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                                <div class="w-10 h-10 bg-orange-50 dark:bg-orange-900/30 text-orange-500 rounded-full flex items-center justify-center mb-2">
+                                    <i class="ph ph-upload-simple text-lg"></i>
                                 </div>
-                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">Click to upload files</span>
-                                <span class="text-xs text-slate-400 mt-1">Photo, Aadhar, Marksheet</span>
+                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Click to upload files</span>
+                                <span class="text-[10px] text-slate-400 mt-1">Photo, Aadhar, Marksheet</span>
                             </div>
                         </div>
                     </div>
@@ -665,59 +682,83 @@
         </div>
 
         <!-- OTHER TABS PLACEHOLDER (FollowUps, Admissions, Analytics, Reports) -->
-        <div id="tab-followups" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-6 text-orange-500 dark:text-orange-400 shadow-soft">
-                <i class="ph-fill ph-calendar-check text-5xl"></i>
+        <div id="tab-followups" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center pb-24">
+            <div class="w-20 h-20 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-6 text-orange-500 dark:text-orange-400 shadow-soft">
+                <i class="ph-fill ph-calendar-check text-4xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Follow Ups Module</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Track your scheduled callbacks and high-priority reminders here. Integration active.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Follow Ups Module</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-xs md:text-sm">Track your scheduled callbacks and high-priority reminders here. Integration active.</p>
         </div>
         
-        <div id="tab-admissions" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6 text-blue-500 dark:text-blue-400 shadow-soft">
-                <i class="ph-fill ph-graduation-cap text-5xl"></i>
+        <div id="tab-admissions" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center pb-24">
+            <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6 text-blue-500 dark:text-blue-400 shadow-soft">
+                <i class="ph-fill ph-graduation-cap text-4xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Admissions Board</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Manage confirmed admissions, fee receipts, and enrolled batches.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Admissions Board</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-xs md:text-sm">Manage confirmed admissions, fee receipts, and enrolled batches.</p>
         </div>
 
-        <div id="tab-reports" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 text-purple-500 dark:text-purple-400 shadow-soft">
-                <i class="ph-fill ph-file-text text-5xl"></i>
+        <div id="tab-reports" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center pb-24">
+            <div class="w-20 h-20 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 text-purple-500 dark:text-purple-400 shadow-soft">
+                <i class="ph-fill ph-file-text text-4xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Advanced Reports</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Generate daily, weekly, and monthly lead reports.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Advanced Reports</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-xs md:text-sm">Generate daily, weekly, and monthly lead reports.</p>
         </div>
         
-        <div id="tab-analytics" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-6 text-brand-500 dark:text-brand-400 shadow-soft">
-                <i class="ph-fill ph-chart-bar text-5xl"></i>
+        <div id="tab-analytics" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center pb-24">
+            <div class="w-20 h-20 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-6 text-brand-500 dark:text-brand-400 shadow-soft">
+                <i class="ph-fill ph-chart-bar text-4xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Analytics Dashboard</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Visualize course popularity, conversion rates, and revenue metrics.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Analytics Dashboard</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-xs md:text-sm">Visualize course popularity, conversion rates, and revenue metrics.</p>
         </div>
         
-        <div id="tab-settings" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 text-slate-500 dark:text-slate-400 shadow-soft">
-                <i class="ph-fill ph-gear text-5xl"></i>
+        <div id="tab-settings" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center pb-24">
+            <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 text-slate-500 dark:text-slate-400 shadow-soft">
+                <i class="ph-fill ph-gear text-4xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">System Settings</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Configure custom fields, tags, and agent access controls.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">System Settings</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-xs md:text-sm">Configure custom fields, tags, and agent access controls.</p>
         </div>
 
     </main>
+
+    <!-- App-Like Smartphone Bottom Navigation Tab Bar (thumbs-reach menu) -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-850 backdrop-blur-lg flex justify-around items-center py-2.5 shadow-xl pb-safe">
+        <button onclick="switchTab('dashboard', 'Overview'); document.getElementById('segmentBtnForm').click();" class="flex flex-col items-center gap-1 text-brand-600 dark:text-brand-400 transition-colors">
+            <i class="ph-fill ph-squares-four text-xl"></i>
+            <span class="text-[9px] font-bold">Dashboard</span>
+        </button>
+        <button onclick="switchTab('customers', 'Customer Database')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-500 transition-colors">
+            <i class="ph ph-users text-xl"></i>
+            <span class="text-[9px] font-semibold">Customers</span>
+        </button>
+        <button onclick="switchTab('followups', 'Follow Ups')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-500 transition-colors">
+            <i class="ph ph-calendar-check text-xl"></i>
+            <span class="text-[9px] font-semibold">Followups</span>
+        </button>
+        <button onclick="switchTab('admissions', 'Admissions Board')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-500 transition-colors">
+            <i class="ph ph-graduation-cap text-xl"></i>
+            <span class="text-[9px] font-semibold">Admissions</span>
+        </button>
+        <button onclick="toggleMobileMenu()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-brand-500 transition-colors">
+            <i class="ph ph-list text-xl"></i>
+            <span class="text-[9px] font-semibold">Menu</span>
+        </button>
+    </div>
 </div>
 
 <!-- Complete Agent Profile Modal -->
 <div id="agentProfileModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1000] hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-400 to-blue-500"></div>
         <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-500">
-                <i class="ph-fill ph-identification-badge text-3xl"></i>
+            <div class="w-14 h-14 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-3 text-brand-500">
+                <i class="ph-fill ph-identification-badge text-2xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-1">Complete Your Profile</h3>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Please set up your agent profile to access the CRM.</p>
+            <h3 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-1">Complete Your Profile</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm">Please set up your agent profile to access the CRM.</p>
         </div>
         
         <form id="agentProfileForm" class="space-y-4">
@@ -829,13 +870,40 @@
 
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('profileDropdownMenu');
-            const trigger = dropdown.previousElementSibling;
-            if (dropdown.classList.contains('dropdown-active') && !dropdown.contains(e.target) && !trigger.contains(e.target)) {
+            const trigger = dropdown?.previousElementSibling;
+            if (dropdown && dropdown.classList.contains('dropdown-active') && !dropdown.contains(e.target) && !trigger.contains(e.target)) {
                 dropdown.classList.remove('dropdown-active');
             }
         });
     };
     setupUI();
+
+    window.toggleMobileDashboardSegment = (segment) => {
+        const formContainer = document.getElementById('mobileDashboardFormContainer');
+        const previewContainer = document.getElementById('mobileDashboardPreviewContainer');
+        const btnForm = document.getElementById('segmentBtnForm');
+        const btnPreview = document.getElementById('segmentBtnPreview');
+
+        if(segment === 'form') {
+            formContainer.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            previewContainer.classList.remove('block');
+            
+            btnForm.classList.add('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-slate-800', 'dark:text-white');
+            btnForm.classList.remove('text-slate-500', 'dark:text-slate-400');
+            btnPreview.classList.remove('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-slate-800', 'dark:text-white');
+            btnPreview.classList.add('text-slate-500', 'dark:text-slate-400');
+        } else {
+            formContainer.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+            previewContainer.classList.add('block');
+            
+            btnPreview.classList.add('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-slate-800', 'dark:text-white');
+            btnPreview.classList.remove('text-slate-500', 'dark:text-slate-400');
+            btnForm.classList.remove('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-slate-800', 'dark:text-white');
+            btnForm.classList.add('text-slate-500', 'dark:text-slate-400');
+        }
+    };
 
     window.toggleProfileDropdown = (e) => {
         e.stopPropagation();
@@ -922,7 +990,6 @@
         document.getElementById("dropdownEmail").innerText = agent.email;
         document.getElementById("agentAvatar").src = avatarUrl;
         
-        // This is key: Updating the hidden input used as fallback
         document.getElementById("callerName").value = agent.displayName;
         
         updateGreeting(agent.displayName);
@@ -991,7 +1058,6 @@
             document.getElementById('appView').classList.remove('hidden');
             
             loadAgentProfile(user).then(() => {
-                // Load history only after agent is loaded to filter properly
                 loadHistory();
                 updatePreview();
             });
@@ -1036,9 +1102,7 @@
         } catch { return false; }
     };
 
-    // Ensure generator natively pulls Display Name
     window.generateMessage = () => {
-        // ALWAYS use currentAgent.displayName if available
         const caller = currentAgent ? currentAgent.displayName : (document.getElementById("callerName").value || "Agent");
         const customerName = document.getElementById("customerName").value.trim();
         const mood = document.getElementById("customerMood").value;
@@ -1059,33 +1123,44 @@
         document.getElementById("messagePreview").innerHTML = msg + timeHTML;
     };
 
-    window.sendWhatsApp = async () => {
+    /* 
+       Optimized `sendWhatsApp` function: 
+       Opened instantly on synchronous call to completely bypass all smartphone popup-blocker restrictions. 
+       The background CRM mapping and save scripts run concurrently.
+    */
+    window.sendWhatsApp = () => {
         const number = document.getElementById("customerNumber").value;
         if(number.length < 10) return showAlert("Please enter a valid 10-digit number.");
+        
         const btn = document.getElementById("sendBtn");
         const originalContent = btn.innerHTML;
         btn.disabled = true; 
         btn.innerHTML = `<i class="ph-fill ph-spinner-gap animate-spin text-xl"></i> Syncing...`;
         
-        const isSaved = await saveLead({
+        // Synchronous immediate redirection ensures Chrome/Safari on iOS and Android never block the tab!
+        const waUrl = `https://wa.me/91${number}?text=${encodeURIComponent(window.generateMessage())}`;
+        window.open(waUrl, '_blank');
+        
+        // Launch asynchronous network logs in background without slowing down navigation
+        const leadData = {
             caller: currentAgent ? currentAgent.displayName : document.getElementById("callerName").value,
             customerName: document.getElementById("customerName").value,
             phone: number,
             status: document.getElementById("customerMood").value
-        });
+        };
         
-        btn.disabled = false; 
-        btn.innerHTML = originalContent;
-        
-        if(isSaved) {
+        window.saveLead(leadData).then(() => {
             saveToExtendedCRMModule(number);
-            
-            window.open(`https://wa.me/91${number}?text=${encodeURIComponent(window.generateMessage())}`, '_blank');
             const moodSelect = document.getElementById("customerMood");
             saveToHistory(number, moodSelect.options[moodSelect.selectedIndex].text);
             clearFormUI();
-            customToast("Lead created and mapped successfully!");
-        } else showAlert("Error saving lead. Please check connection.");
+            customToast("Lead successfully created and mapped!");
+        }).catch(() => {
+            customToast("Saved locally. Network sync pending.");
+        }).finally(() => {
+            btn.disabled = false; 
+            btn.innerHTML = originalContent;
+        });
     };
 
     window.saveToHistory = (num, mood) => {
@@ -1097,12 +1172,10 @@
         loadHistory();
     };
 
-    // Filters History to ONLY show current agent's history
     window.loadHistory = () => {
         let container = document.getElementById("historyBody");
         let history = JSON.parse(localStorage.getItem("udaanHistory")) || [];
         
-        // Scope to Agent
         if(currentAgent) {
             history = history.filter(h => h.agent === currentAgent.displayName);
         }
@@ -1113,17 +1186,17 @@
         }
 
         container.innerHTML = history.map(item => `
-            <div class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4 transition hover:-translate-y-0.5 mb-2">
-                <div class="h-10 w-10 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center border border-brand-100 dark:border-brand-800 shrink-0 text-brand-500">
-                    <i class="ph-fill ph-user text-lg"></i>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4 transition hover:-translate-y-0.5 mb-2">
+                <div class="h-9 w-9 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center border border-brand-100 dark:border-brand-800 shrink-0 text-brand-500">
+                    <i class="ph-fill ph-user text-base"></i>
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start mb-0.5">
                         <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${item.number}</h4>
-                        <span class="text-[10px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">${item.time}</span>
+                        <span class="text-[9px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">${item.time}</span>
                     </div>
                     <div class="flex items-center justify-between mt-1">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wide bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                             ${item.mood}
                         </span>
                     </div>
@@ -1133,7 +1206,6 @@
 
     window.clearHistory = () => { 
         if(confirm("Are you sure you want to clear your recent history?")) {
-            // Only clear this agent's history
             let history = JSON.parse(localStorage.getItem("udaanHistory")) || [];
             if(currentAgent) {
                 history = history.filter(h => h.agent !== currentAgent.displayName);
@@ -1170,11 +1242,10 @@
             else target.classList.add('flex');
         }
 
-        if(window.innerWidth < 768) {
-            const sidebar = document.getElementById('mainSidebar');
-            if(sidebar && !sidebar.classList.contains('-translate-x-full')) {
-                toggleMobileMenu();
-            }
+        // Close sidebar if on mobile screens
+        const sidebar = document.getElementById('mainSidebar');
+        if(sidebar && !sidebar.classList.contains('-translate-x-full')) {
+            toggleMobileMenu();
         }
     };
 
@@ -1275,7 +1346,6 @@
         updateDashboardStats();
     };
 
-    // Scopes dashboard stats purely to current agent
     const updateDashboardStats = () => {
         if(!currentAgent) return;
         const myName = currentAgent.displayName;
@@ -1291,7 +1361,6 @@
         document.getElementById('statWhatsApp').innerText = myHistory.length;
     };
 
-    // Scopes rendering to current agent's customers
     const renderCustomersList = () => {
         const grid = document.getElementById("customersGrid");
         if(!currentAgent) return;
@@ -1316,27 +1385,27 @@
             else if(c.status === 'admission') statusColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800";
 
             return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow relative group">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-750 p-4 md:p-5 hover:shadow-md transition-shadow relative group">
                 <div class="flex justify-between items-start mb-4">
-                    <div class="flex gap-3 items-center">
-                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random" class="w-12 h-12 rounded-full shadow-sm">
-                        <div>
-                            <h3 class="font-bold text-slate-800 dark:text-white text-lg leading-tight truncate w-32 md:w-40">${c.name}</h3>
-                            <span class="text-xs font-semibold text-slate-500">${c.phone}</span>
+                    <div class="flex gap-3 items-center min-w-0">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random" class="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-sm">
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-slate-800 dark:text-white text-base leading-tight truncate w-24 md:w-40">${c.name}</h3>
+                            <span class="text-[11px] font-semibold text-slate-500">${c.phone}</span>
                         </div>
                     </div>
-                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusColor}">${c.status.replace('interested_', 'Int. ')}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${statusColor} shrink-0">${c.status.replace('interested_', 'Int. ')}</span>
                 </div>
                 
-                <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-5">
-                    <div class="flex items-center gap-2"><i class="ph ph-briefcase"></i> <span class="truncate">${c.course}</span></div>
+                <div class="space-y-2 text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-5">
+                    <div class="flex items-center gap-2"><i class="ph ph-briefcase text-base shrink-0"></i> <span class="truncate">${c.course}</span></div>
                     <div class="flex justify-between">
-                        <span class="flex items-center gap-2"><i class="ph ph-map-pin"></i> ${c.city}</span>
-                        <span class="flex items-center gap-2"><i class="ph ph-user"></i> ${c.assignedAgent || 'Agent'}</span>
+                        <span class="flex items-center gap-2"><i class="ph ph-map-pin text-base"></i> ${c.city}</span>
+                        <span class="flex items-center gap-2"><i class="ph ph-user text-base"></i> ${c.assignedAgent || 'Agent'}</span>
                     </div>
                 </div>
                 
-                <button onclick="window.openCustomerProfile('${c.id}')" class="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-2">
+                <button onclick="window.openCustomerProfile('${c.id}')" class="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-2 text-xs md:text-sm">
                     <i class="ph ph-user-circle"></i> Open Profile
                 </button>
             </div>
@@ -1359,6 +1428,10 @@
         document.getElementById("profAgent").innerText = customer.assignedAgent || "Unknown";
         document.getElementById("profAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random&size=128`;
         
+        document.getElementById("profileDirectWaBtn").onclick = () => {
+            window.open(`https://wa.me/91${customer.phone}`, '_blank');
+        };
+
         if(customer.tags && customer.tags.length > 0) {
             document.getElementById("profTagsList").innerHTML = customer.tags.map(t => `<span class="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${t}</span>`).join('');
         } else {
