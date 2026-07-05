@@ -2,7 +2,7 @@
 <html lang="gu" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>UVACALLING - Student Lead Management CRM</title>
     
     <!-- PWA Meta Tags for App Installation -->
@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="UVACRM">
+    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=UVA&background=22c55e&color=fff&size=512">
     <link rel="manifest" id="manifest-link">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +35,14 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
         .whatsapp-bg { 
             background-color: #e5ddd5; 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
@@ -51,6 +59,9 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .dark .glass { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); }
 
@@ -58,7 +69,7 @@
         .input-group input, .input-group select, .input-group textarea {
             width: 100%; padding: 1.25rem 1rem 0.5rem; background-color: transparent;
             border: 1px solid #e2e8f0; border-radius: 0.75rem; transition: all 0.2s;
-            color: inherit;
+            color: inherit; min-height: 44px;
         }
         .dark .input-group input, .dark .input-group select, .dark .input-group textarea { border-color: #334155; }
         .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
@@ -74,23 +85,26 @@
             top: 0.25rem; font-size: 0.65rem; color: #22c55e; font-weight: 600;
         }
         
-        /* Timeline styling */
         .timeline-container { position: relative; padding-left: 24px; }
         .timeline-line { position: absolute; left: 7px; top: 4px; bottom: 0; width: 2px; background: #e2e8f0; }
         .dark .timeline-line { background: #334155; }
         .timeline-dot { position: absolute; left: 0; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: #22c55e; border: 3px solid #fff; z-index: 10; }
         .dark .timeline-dot { border-color: #1e293b; }
         
-        /* Checkbox styling */
         .task-checkbox:checked + label { text-decoration: line-through; color: #94a3b8; }
         
-        /* Dropdown transition */
         .dropdown-enter { opacity: 0; transform: scale(0.95) translateY(-10px); pointer-events: none; }
         .dropdown-active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
         
-        /* Mobile Input Zoom Fix */
         @media (max-width: 768px) {
             .input-group input, .input-group select, .input-group textarea { font-size: 16px !important; }
+        }
+        
+        .overdue-badge { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
@@ -135,6 +149,54 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-full max-w-sm max-h-[90vh] overflow-y-auto text-center shadow-2xl border border-slate-100 dark:border-slate-700">
+        <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500">
+            <i class="ph-fill ph-info text-3xl"></i>
+        </div>
+        <h3 id="modalTitle" class="text-xl font-bold mb-2 text-slate-800 dark:text-white">Notice</h3>
+        <p id="modalMessage" class="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed"></p>
+        <button id="modalOkBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] min-h-[44px]">Got it, thanks!</button>
+    </div>
+</div>
+
+<!-- Duplicate Detection Modal -->
+<div id="duplicateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-400 to-red-500"></div>
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center justify-center text-orange-500 shrink-0">
+                <i class="ph-fill ph-warning-circle text-2xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white">Duplicate Number Found</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-xs">This mobile number is already in the database.</p>
+            </div>
+        </div>
+        
+        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl mb-6 space-y-2 text-sm border border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between"><span class="text-slate-500 font-semibold">Lead ID:</span> <span id="dupLeadId" class="font-bold text-slate-800 dark:text-white"></span></div>
+            <div class="flex justify-between"><span class="text-slate-500 font-semibold">Customer:</span> <span id="dupCustomerName" class="font-bold text-slate-800 dark:text-white truncate max-w-[150px] text-right"></span></div>
+            <div class="flex justify-between"><span class="text-slate-500 font-semibold">Current Status:</span> <span id="dupStatus" class="font-bold text-brand-600"></span></div>
+            <div class="flex justify-between"><span class="text-slate-500 font-semibold">Created Date:</span> <span id="dupDate" class="font-bold text-slate-800 dark:text-white"></span></div>
+            <div class="flex justify-between"><span class="text-slate-500 font-semibold">Assigned To:</span> <span id="dupAgent" class="font-bold text-slate-800 dark:text-white truncate max-w-[150px] text-right"></span></div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <button id="dupOpenBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 min-h-[44px]">
+                <i class="ph-bold ph-user-circle"></i> Open Existing Profile
+            </button>
+            <button id="dupCreateBtn" class="w-full py-3 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold rounded-xl transition-all active:scale-[0.98] min-h-[44px]">
+                Create Duplicate Anyway
+            </button>
+            <button onclick="document.getElementById('duplicateModal').classList.add('hidden'); document.getElementById('duplicateModal').classList.remove('flex');" class="w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm font-bold transition-colors min-h-[44px]">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Login View -->
 <div id="loginView" class="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center p-4 overflow-y-auto transition-opacity duration-500" style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=2000');">
     <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
@@ -147,13 +209,12 @@
                     <div class="bg-white p-2 rounded-xl text-brand-600"><i class="ph-fill ph-student text-2xl"></i></div>
                     <span class="text-xl font-bold tracking-wider">UVACRM</span>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 md:mb-6 leading-tight tracking-tight">Lead<br>Management.</h1>
-                <p class="text-brand-50 text-base md:text-lg mb-8 opacity-90">The Premium Student Management CRM built exclusively for Udaan Vibrant Academy.</p>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 md:mb-6 leading-tight tracking-tight">Smart<br>Calling.</h1>
+                <p class="text-brand-50 text-base md:text-lg mb-8 opacity-90">Accelerate your workflow with 1-click WhatsApp sync & automated lead management.</p>
                 
                 <div class="space-y-4 text-sm font-medium opacity-90 pb-4 md:pb-0">
                     <div class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-brand-100 text-xl"></i> Complete Student Journey</div>
                     <div class="flex items-center gap-3"><i class="ph-fill ph-lightning text-brand-100 text-xl"></i> 1-Click WhatsApp Sync</div>
-                    <div class="flex items-center gap-3"><i class="ph-fill ph-shield-check text-brand-100 text-xl"></i> Secure Agent Profiles</div>
                 </div>
             </div>
         </div>
@@ -177,7 +238,7 @@
                         <i class="ph ph-lock-key absolute right-4 top-4 text-slate-400 text-xl"></i>
                     </div>
                     
-                    <button type="submit" id="loginBtn" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3.5 rounded-xl shadow-[0_8px_20px_-6px_rgba(22,163,74,0.5)] transition-all active:scale-[0.98] flex justify-center items-center gap-2 mt-4">
+                    <button type="submit" id="loginBtn" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3.5 rounded-xl shadow-[0_8px_20px_-6px_rgba(22,163,74,0.5)] transition-all active:scale-[0.98] flex justify-center items-center gap-2 mt-4 min-h-[44px]">
                         <i class="ph ph-sign-in text-lg"></i> <span id="loginBtnText">Secure Login</span>
                     </button>
                 </form>
@@ -192,49 +253,39 @@
     <!-- Mobile Sidebar Backdrop -->
     <div id="sidebarBackdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
 
-    <!-- Left Sidebar (Drawer on Mobile) -->
+    <!-- Left Sidebar -->
     <aside id="mainSidebar" class="w-64 flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col fixed md:relative h-full z-50 shadow-soft transition-transform duration-300 -translate-x-full md:translate-x-0">
-        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-700 gap-3 justify-between">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-700 gap-3 justify-between shrink-0">
             <div class="flex items-center gap-3">
                 <div class="bg-brand-100 text-brand-600 p-1.5 rounded-lg"><i class="ph-fill ph-student text-xl"></i></div>
                 <span class="text-lg font-extrabold tracking-wide text-slate-800 dark:text-white">UVACRM</span>
             </div>
-            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl"><i class="ph ph-x"></i></button>
+            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl p-2"><i class="ph ph-x"></i></button>
         </div>
         
         <div class="p-4 flex-1 overflow-y-auto space-y-1">
             <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4 px-3">Main Menu</div>
-            <a href="#" onclick="switchTab('dashboard', 'Overview', this)" class="sidebar-link bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
+            <a href="#" onclick="switchTab('dashboard', 'Overview', this)" class="sidebar-link bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors min-h-[44px]">
                 <i class="ph-fill ph-squares-four text-lg"></i> Dashboard
             </a>
-            <a href="#" onclick="switchTab('dashboard', 'New Lead Entry', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
+            <a href="#" onclick="switchTab('newlead', 'New Lead Entry', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors min-h-[44px]">
                 <i class="ph ph-user-plus text-lg"></i> New Lead
             </a>
-            <a href="#" onclick="switchTab('customers', 'Customer Database', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
+            <a href="#" onclick="switchTab('customers', 'Customer Database', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors min-h-[44px]">
                 <i class="ph ph-users text-lg"></i> Customers
-            </a>
-            <a href="#" onclick="switchTab('followups', 'Follow Ups', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between px-3 py-2.5 rounded-xl font-medium transition-colors">
-                <div class="flex items-center gap-3"><i class="ph ph-calendar-check text-lg"></i> Follow Ups</div>
-                <span class="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 py-0.5 px-2 rounded-md text-xs font-bold" id="sidebarFollowupBadge">0</span>
-            </a>
-            <a href="#" onclick="switchTab('admissions', 'Admissions Board', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
-                <i class="ph ph-graduation-cap text-lg"></i> Admissions
             </a>
             
             <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-3">Analytics & Settings</div>
-            <a href="#" onclick="switchTab('reports', 'Reports', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
-                <i class="ph ph-file-text text-lg"></i> Reports
+            <a href="#" onclick="switchTab('reports', 'Data Reports', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors min-h-[44px]">
+                <i class="ph ph-file-csv text-lg"></i> Reports
             </a>
-            <a href="#" onclick="switchTab('analytics', 'Analytics', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
+            <a href="#" onclick="switchTab('analytics', 'Analytics', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors min-h-[44px]">
                 <i class="ph ph-chart-bar text-lg"></i> Analytics
-            </a>
-            <a href="#" onclick="switchTab('settings', 'System Settings', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors">
-                <i class="ph ph-gear text-lg"></i> Settings
             </a>
         </div>
         
-        <div class="p-4 border-t border-slate-100 dark:border-slate-700">
-            <button onclick="logout()" class="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium transition-colors">
+        <div class="p-4 border-t border-slate-100 dark:border-slate-700 shrink-0">
+            <button onclick="logout()" class="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-medium transition-colors min-h-[44px]">
                 <i class="ph ph-sign-out text-lg"></i> Logout
             </button>
         </div>
@@ -243,43 +294,48 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col h-[100dvh] overflow-hidden relative w-full">
         <!-- Header -->
-        <header class="h-16 glass z-10 flex items-center justify-between px-4 lg:px-8 shrink-0 shadow-sm border-b border-slate-200 dark:border-slate-700">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-500 text-2xl hover:text-brand-600 transition"><i class="ph ph-list"></i></button>
-                <div class="hidden sm:block">
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight" id="currentTabTitle">Overview</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium" id="currentDate">Mon, Oct 24</p>
+        <header class="h-16 glass z-10 flex items-center justify-between px-3 md:px-4 lg:px-8 shrink-0 shadow-sm border-b border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2 md:gap-4 shrink-0">
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-500 text-2xl hover:text-brand-600 transition p-1"><i class="ph ph-list"></i></button>
+                <div class="hidden md:block">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight truncate" id="currentTabTitle">Overview</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate" id="currentDate">Mon, Oct 24</p>
                 </div>
             </div>
             
-            <div class="hidden md:flex flex-1 max-w-md mx-8 relative">
+            <div class="flex flex-1 max-w-md mx-2 sm:mx-4 relative">
                 <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" placeholder="Search leads, phones, or courses..." class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-500 outline-none text-slate-700 dark:text-slate-200 transition-all">
+                <input type="text" id="globalSearch" placeholder="Search leads, phones..." class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-500 outline-none text-slate-700 dark:text-slate-200 transition-all min-h-[40px]">
             </div>
 
-            <div class="flex items-center gap-3 sm:gap-5 relative">
-                <div class="text-right hidden sm:block">
+            <div class="flex items-center gap-2 sm:gap-4 relative shrink-0">
+                <!-- PWA Install Button -->
+                <button id="installAppBtn" class="hidden text-sm bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-400 px-3 py-1.5 rounded-full font-bold shadow-sm items-center gap-1 hover:bg-brand-200 dark:hover:bg-brand-900/60 transition-colors min-h-[40px]">
+                    <i class="ph-fill ph-download-simple"></i> <span class="hidden lg:inline">Install App</span>
+                </button>
+
+                <div class="text-right hidden xl:block">
                     <div class="text-sm font-bold text-slate-800 dark:text-white" id="currentTime">10:24 AM</div>
                 </div>
-                <button id="themeToggle" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-all">
+                <button id="themeToggle" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-all min-w-[40px] min-h-[40px] flex items-center justify-center">
                     <i class="ph-fill ph-moon dark:hidden text-lg"></i>
                     <i class="ph-fill ph-sun hidden dark:block text-lg"></i>
                 </button>
                 
                 <!-- Premium Profile Dropdown Trigger -->
                 <div class="relative">
-                    <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 cursor-pointer p-1 pr-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                    <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-2 sm:gap-3 cursor-pointer p-1 pr-1 sm:pr-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
                         <div class="relative">
-                            <img src="https://ui-avatars.com/api/?name=Agent&background=22c55e&color=fff" id="agentAvatar" class="w-9 h-9 rounded-full border-2 border-white dark:border-slate-600 shadow-sm object-cover">
+                            <img src="https://ui-avatars.com/api/?name=Agent&background=22c55e&color=fff" id="agentAvatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white dark:border-slate-600 shadow-sm object-cover">
                             <!-- Online Status Dot -->
-                            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
+                            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
                         </div>
-                        <div class="hidden sm:block leading-tight">
+                        <div class="hidden sm:block leading-tight max-w-[120px]">
                             <div class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1">
-                                <span id="displayAgentName">Agent Name</span>
+                                <span id="displayAgentName" class="truncate">Agent Name</span>
                                 <i class="ph-fill ph-caret-down text-xs text-slate-400"></i>
                             </div>
-                            <div class="text-[10px] font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wide" id="displayAgentRole">Counsellor</div>
+                            <div class="text-[10px] font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wide truncate" id="displayAgentRole">Counsellor</div>
                         </div>
                     </div>
 
@@ -289,19 +345,8 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Signed in as</p>
                             <p class="text-sm font-bold text-slate-800 dark:text-white truncate" id="dropdownEmail">agent@udaan.com</p>
                         </div>
-                        <div class="p-2 space-y-1">
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">
-                                <i class="ph ph-user-circle text-lg text-slate-400"></i> My Profile
-                            </a>
-                            <a href="#" onclick="openEditProfile()" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">
-                                <i class="ph ph-pencil-simple text-lg text-slate-400"></i> Edit Profile
-                            </a>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">
-                                <i class="ph ph-gear text-lg text-slate-400"></i> Settings
-                            </a>
-                        </div>
                         <div class="p-2 border-t border-slate-100 dark:border-slate-700">
-                            <a href="#" onclick="logout()" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+                            <a href="#" onclick="logout()" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors min-h-[44px]">
                                 <i class="ph ph-sign-out text-lg"></i> Logout
                             </a>
                         </div>
@@ -310,46 +355,82 @@
             </div>
         </header>
 
-        <!-- DASHBOARD & NEW LEAD TAB -->
-        <div id="tab-dashboard" class="tab-content flex-1 overflow-y-auto p-4 lg:p-6 lg:flex lg:gap-6 w-full">
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content flex-1 overflow-y-auto p-4 lg:p-8 w-full flex flex-col">
+            <h2 id="welcomeGreeting" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white mb-6 md:mb-8">Good Afternoon 👋</h2>
             
-            <div class="flex-1 space-y-6 w-full">
-                <!-- Dynamic Welcome Greeting -->
-                <h2 id="welcomeGreeting" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white mb-2">Good Morning! 👋</h2>
-                
-                <!-- Stats Row (Filters to Current Agent) -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="bg-blue-100 text-blue-600 dark:bg-blue-900/40 p-2 rounded-xl"><i class="ph-fill ph-users text-xl"></i></div>
-                        </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Today's Leads</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statTodayLeads">0</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                <!-- Primary Stats -->
+                <div onclick="switchTab('customers', 'Customer Database', document.querySelector('.sidebar-link:nth-child(4)'))" class="bg-[#1e2738] rounded-3xl p-5 md:p-6 shadow-soft cursor-pointer hover:-translate-y-1 transition-transform border border-slate-700">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 mb-3 md:mb-4">
+                        <i class="ph-fill ph-users text-xl md:text-2xl"></i>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="bg-green-100 text-green-600 dark:bg-green-900/40 p-2 rounded-xl"><i class="ph-fill ph-check-square-offset text-xl"></i></div>
-                        </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Admissions</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statAdmissions">0</div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="bg-orange-100 text-orange-600 dark:bg-orange-900/40 p-2 rounded-xl"><i class="ph-fill ph-clock-counter-clockwise text-xl"></i></div>
-                        </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Follow Ups</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statFollowups">0</div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 hover:-translate-y-1 transition-transform">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="bg-brand-100 text-brand-600 dark:bg-brand-900/40 p-2 rounded-xl"><i class="ph-fill ph-whatsapp-logo text-xl"></i></div>
-                        </div>
-                        <h4 class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">WhatsApp Sent</h4>
-                        <div class="text-2xl font-extrabold text-slate-800 dark:text-white" id="statWhatsApp">0</div>
-                    </div>
+                    <h4 class="text-slate-400 font-semibold text-xs md:text-sm mb-1 uppercase tracking-wide">Total Leads</h4>
+                    <div class="text-3xl md:text-4xl font-bold text-white" id="statTotalLeads">0</div>
                 </div>
 
-                <!-- LEAD ENTRY FORM -->
+                <div onclick="switchTab('customers', 'Customer Database', document.querySelector('.sidebar-link:nth-child(4)'))" class="bg-[#1e2738] rounded-3xl p-5 md:p-6 shadow-soft cursor-pointer hover:-translate-y-1 transition-transform border border-slate-700">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-900/40 rounded-2xl flex items-center justify-center text-emerald-500 mb-3 md:mb-4">
+                        <i class="ph-fill ph-check-square-offset text-xl md:text-2xl"></i>
+                    </div>
+                    <h4 class="text-slate-400 font-semibold text-xs md:text-sm mb-1 uppercase tracking-wide">Admissions</h4>
+                    <div class="text-3xl md:text-4xl font-bold text-white" id="statAdmissions">0</div>
+                </div>
+
+                <div onclick="switchTab('customers', 'Customer Database', document.querySelector('.sidebar-link:nth-child(4)'))" class="bg-[#1e2738] rounded-3xl p-5 md:p-6 shadow-soft cursor-pointer hover:-translate-y-1 transition-transform border border-slate-700 relative overflow-hidden">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 mb-3 md:mb-4">
+                        <i class="ph-fill ph-warning-circle text-xl md:text-2xl"></i>
+                    </div>
+                    <h4 class="text-slate-400 font-semibold text-xs md:text-sm mb-1 uppercase tracking-wide">Overdue Follow Ups</h4>
+                    <div class="text-3xl md:text-4xl font-bold text-red-400" id="statOverdue">0</div>
+                </div>
+
+                <div onclick="switchTab('customers', 'Customer Database', document.querySelector('.sidebar-link:nth-child(4)'))" class="bg-[#1e2738] rounded-3xl p-5 md:p-6 shadow-soft cursor-pointer hover:-translate-y-1 transition-transform border border-slate-700">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-orange-900/40 rounded-2xl flex items-center justify-center text-orange-500 mb-3 md:mb-4">
+                        <i class="ph-fill ph-clock-counter-clockwise text-xl md:text-2xl"></i>
+                    </div>
+                    <h4 class="text-slate-400 font-semibold text-xs md:text-sm mb-1 uppercase tracking-wide">Today's Follow Ups</h4>
+                    <div class="text-3xl md:text-4xl font-bold text-white" id="statTodayFollowups">0</div>
+                </div>
+
+                <!-- Secondary Stats -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 md:p-5 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 font-semibold text-[10px] md:text-xs uppercase tracking-wide">Hot Leads</h4>
+                        <div class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white" id="statHotLeads">0</div>
+                    </div>
+                    <div class="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center"><i class="ph-fill ph-fire text-xl"></i></div>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 md:p-5 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 font-semibold text-[10px] md:text-xs uppercase tracking-wide">Warm Leads</h4>
+                        <div class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white" id="statWarmLeads">0</div>
+                    </div>
+                    <div class="w-10 h-10 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-full flex items-center justify-center"><i class="ph-fill ph-sun text-xl"></i></div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 md:p-5 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 font-semibold text-[10px] md:text-xs uppercase tracking-wide">Busy / Callbacks</h4>
+                        <div class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white" id="statBusy">0</div>
+                    </div>
+                    <div class="w-10 h-10 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 rounded-full flex items-center justify-center"><i class="ph-fill ph-phone-pause text-xl"></i></div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 md:p-5 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 font-semibold text-[10px] md:text-xs uppercase tracking-wide">Conversion Rate</h4>
+                        <div class="text-xl md:text-2xl font-bold text-brand-600" id="statConversion">0%</div>
+                    </div>
+                    <div class="w-10 h-10 bg-brand-50 dark:bg-brand-900/20 text-brand-600 rounded-full flex items-center justify-center"><i class="ph-fill ph-trend-up text-xl"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW LEAD TAB -->
+        <div id="tab-newlead" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 lg:flex lg:gap-6 w-full">
+            <div class="flex-1 space-y-6 w-full">
                 <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden relative">
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-blue-500"></div>
                     
@@ -360,15 +441,15 @@
                             </h2>
                             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Log conversation details and sync to WhatsApp.</p>
                         </div>
-                        <button onclick="clearFormUI()" class="p-2 w-full md:w-auto text-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition" title="Clear Form">
-                            <i class="ph ph-eraser text-xl hidden md:inline"></i> <span class="md:hidden">Clear Form</span>
+                        <button onclick="clearFormUI()" class="p-2 w-full md:w-auto text-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition min-h-[44px]" title="Clear Form">
+                            <i class="ph ph-eraser text-xl hidden md:inline"></i> <span class="md:hidden font-bold">Clear Form</span>
                         </button>
                     </div>
 
-                    <!-- Hidden input preserved for backward compatibility if needed, but dynamically updated -->
                     <input type="hidden" id="callerName" value="">
                     
                     <div class="p-5 md:p-8 space-y-6 md:space-y-8">
+                        <!-- Customer Information -->
                         <div>
                             <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                                 <i class="ph ph-identification-card text-slate-400"></i> Customer Information
@@ -379,7 +460,7 @@
                                     <label>Customer Name</label>
                                 </div>
                                 <div class="input-group">
-                                    <input type="tel" id="customerNumber" oninput="updatePreview()" required placeholder=" " class="dark:bg-slate-900/50">
+                                    <input type="tel" id="customerNumber" oninput="checkDuplicateLive()" required placeholder=" " class="dark:bg-slate-900/50">
                                     <label>WhatsApp Number *</label>
                                 </div>
                                 <div class="input-group">
@@ -390,7 +471,7 @@
                                     <input type="text" id="dummyEdu" placeholder=" " class="dark:bg-slate-900/50">
                                     <label>Education / Occupation</label>
                                 </div>
-                                <div class="input-group md:col-span-2">
+                                <div class="input-group">
                                     <select id="leadSource" class="dark:bg-slate-900/50 appearance-none font-medium text-slate-700 dark:text-slate-200">
                                         <option value="Instagram">Instagram</option>
                                         <option value="Facebook">Facebook</option>
@@ -404,30 +485,37 @@
                                     <label>Lead Source</label>
                                     <i class="ph ph-caret-down absolute right-4 top-4 text-slate-400 pointer-events-none"></i>
                                 </div>
+                                <div class="input-group">
+                                    <select id="leadPriority" class="dark:bg-slate-900/50 appearance-none font-medium text-slate-700 dark:text-slate-200">
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                    <label>Lead Priority</label>
+                                    <i class="ph ph-caret-down absolute right-4 top-4 text-slate-400 pointer-events-none"></i>
+                                </div>
                                 <div class="md:col-span-2 mt-1">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Customer Tags</label>
+                                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Customer Tags (Select Multiple)</label>
                                     <div class="flex flex-wrap gap-2" id="tagContainer">
-                                        <label class="cursor-pointer">
-                                            <input type="checkbox" value="Hot Lead" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-red-50 peer-checked:text-red-600 peer-checked:border-red-200 dark:peer-checked:bg-red-900/30 dark:peer-checked:text-red-400 dark:peer-checked:border-red-800 transition">🔥 Hot Lead</div>
-                                        </label>
-                                        <label class="cursor-pointer">
-                                            <input type="checkbox" value="Warm Lead" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-orange-50 peer-checked:text-orange-600 peer-checked:border-orange-200 dark:peer-checked:bg-orange-900/30 dark:peer-checked:text-orange-400 dark:peer-checked:border-orange-800 transition">☀️ Warm Lead</div>
-                                        </label>
-                                        <label class="cursor-pointer">
-                                            <input type="checkbox" value="Job Seeker" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 peer-checked:text-blue-600 peer-checked:border-blue-200 dark:peer-checked:bg-blue-900/30 dark:peer-checked:text-blue-400 dark:peer-checked:border-blue-800 transition">💼 Job Seeker</div>
-                                        </label>
-                                        <label class="cursor-pointer">
-                                            <input type="checkbox" value="College Student" class="peer hidden custom-tag-checkbox">
-                                            <div class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-purple-50 peer-checked:text-purple-600 peer-checked:border-purple-200 dark:peer-checked:bg-purple-900/30 dark:peer-checked:text-purple-400 dark:peer-checked:border-purple-800 transition">🎓 College Student</div>
-                                        </label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Hot Lead" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-red-50 peer-checked:text-red-600 peer-checked:border-red-200 transition">🔥 Hot Lead</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Warm Lead" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-orange-50 peer-checked:text-orange-600 peer-checked:border-orange-200 transition">☀️ Warm Lead</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Job Seeker" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 peer-checked:text-blue-600 peer-checked:border-blue-200 transition">💼 Job Seeker</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Student" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-purple-50 peer-checked:text-purple-600 peer-checked:border-purple-200 transition">🎓 Student</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="College" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-200 transition">🏫 College</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Working" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-teal-50 peer-checked:text-teal-600 peer-checked:border-teal-200 transition">👔 Working</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Business" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-emerald-50 peer-checked:text-emerald-600 peer-checked:border-emerald-200 transition">🏢 Business</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Govt Job" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-cyan-50 peer-checked:text-cyan-600 peer-checked:border-cyan-200 transition">🏛 Govt Job</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Housewife" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-pink-50 peer-checked:text-pink-600 peer-checked:border-pink-200 transition">🏠 Housewife</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Parent" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-rose-50 peer-checked:text-rose-600 peer-checked:border-rose-200 transition">👨‍👩‍👧‍👦 Parent</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Referral" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-fuchsia-50 peer-checked:text-fuchsia-600 peer-checked:border-fuchsia-200 transition">🔗 Referral</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="VIP" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-yellow-50 peer-checked:text-yellow-600 peer-checked:border-yellow-200 transition">⭐ VIP</div></label>
+                                        <label class="cursor-pointer"><input type="checkbox" value="Urgent" class="peer hidden custom-tag-checkbox"><div class="px-3 py-2 md:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-red-50 peer-checked:text-red-600 peer-checked:border-red-200 transition">⏰ Urgent</div></label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Interest & Status -->
                         <div>
                             <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2 border-t border-slate-100 dark:border-slate-700 pt-6">
                                 <i class="ph ph-briefcase text-slate-400"></i> Interest & Status
@@ -438,8 +526,15 @@
                                         <option value="interested_ai" class="text-slate-800">રસ છે - AI Mastery કોર્સ</option>
                                         <option value="interested_tally" class="text-slate-800">રસ છે - Tally Accountant કોર્સ</option>
                                         <option value="interested_design" class="text-slate-800">રસ છે - DTP & Design કોર્સ</option>
+                                        <option value="interested_ccc" class="text-slate-800">રસ છે - CCC / Basic Computer</option>
+                                        <option value="interested_english" class="text-slate-800">રસ છે - Spoken English</option>
+                                        <option value="interested_web" class="text-slate-800">રસ છે - Web Development</option>
+                                        <option value="interested_all" class="text-slate-800">રસ છે - તમામ કોર્સની માહિતી (All Courses)</option>
                                         <option value="busy" class="text-slate-800">અત્યારે વ્યસ્ત છે</option>
+                                        <option value="wrong_number" class="text-slate-800">રોંગ નંબર (Wrong Number)</option>
+                                        <option value="no_answer" class="text-slate-800">જવાબ નથી (No Answer)</option>
                                         <option value="callback" class="text-slate-800">પછીથી વાત કરશે</option>
+                                        <option value="lost" class="text-slate-800">રસ નથી (Lost/Cold)</option>
                                         <option value="admission" class="text-slate-800">એડમિશન લીધું (Admission Done)</option>
                                     </select>
                                     <label>Customer Response (Mood)</label>
@@ -459,28 +554,29 @@
                         <div class="space-y-5">
                             <div>
                                 <div class="input-group mb-2.5">
-                                    <textarea id="customNote" rows="2" oninput="updatePreview()" placeholder=" " class="dark:bg-slate-900/50 resize-none"></textarea>
-                                    <label>Custom Notes for Customer</label>
+                                    <textarea id="customNote" rows="2" oninput="updatePreview()" placeholder=" " class="dark:bg-slate-900/50 resize-none min-h-[80px]"></textarea>
+                                    <label>Customer Notes (Sent in WhatsApp)</label>
                                 </div>
                                 <div class="flex flex-wrap gap-2">
-                                    <button type="button" onclick="appendNote('🎁 10% Discount')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition whitespace-nowrap">10% Discount</button>
-                                    <button type="button" onclick="appendNote('🆓 Free Demo Class')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition whitespace-nowrap">Free Demo Class</button>
-                                    <button type="button" onclick="appendNote('💳 EMI Available')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition whitespace-nowrap">EMI Available</button>
-                                    <button type="button" onclick="appendNote('💼 100% Job Guarantee')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/50 transition whitespace-nowrap">Job Guarantee</button>
+                                    <!-- Gujarati Buttons -->
+                                    <button type="button" onclick="appendNote('૧૦% ડિસ્કાઉન્ટ')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition whitespace-nowrap min-h-[44px]">૧૦% ડિસ્કાઉન્ટ</button>
+                                    <button type="button" onclick="appendNote('ફ્રી ડેમો ક્લાસ')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition whitespace-nowrap min-h-[44px]">ફ્રી ડેમો ક્લાસ</button>
+                                    <button type="button" onclick="appendNote('હપ્તા ની સગવડ ઉપલબ્ધ')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition whitespace-nowrap min-h-[44px]">હપ્તા ની સગવડ</button>
+                                    <button type="button" onclick="appendNote('ફ્રી મટીરીયલ')" class="px-3 py-2 text-[10px] md:text-xs font-semibold bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/50 transition whitespace-nowrap min-h-[44px]">ફ્રી મટીરીયલ</button>
                                 </div>
                             </div>
                             
                             <div class="input-group">
-                                <textarea id="callerInternalNote" rows="2" placeholder=" " class="dark:bg-slate-900/50 resize-none"></textarea>
+                                <textarea id="callerInternalNote" rows="2" placeholder=" " class="dark:bg-slate-900/50 resize-none min-h-[80px]"></textarea>
                                 <label>Internal Notes (Only for Agent / Not sent to customer)</label>
                             </div>
                         </div>
 
                         <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                            <button id="sendBtn" onclick="sendWhatsApp()" class="w-full sm:flex-[2] bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-[0_8px_20px_-6px_rgba(34,197,94,0.5)] transition-all active:scale-[0.98] flex justify-center items-center gap-2">
+                            <button id="sendBtn" onclick="handleLeadSubmit()" class="w-full sm:flex-[2] bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-[0_8px_20px_-6px_rgba(34,197,94,0.5)] transition-all active:scale-[0.98] flex justify-center items-center gap-2 min-h-[48px]">
                                 <i class="ph-fill ph-whatsapp-logo text-xl"></i> Create Lead & Sync WA
                             </button>
-                            <button onclick="copyMsgUI()" class="w-full sm:flex-[1] bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white font-bold py-3.5 px-6 rounded-xl transition-all flex justify-center items-center gap-2">
+                            <button onclick="copyMsgUI()" class="w-full sm:flex-[1] bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white font-bold py-3.5 px-6 rounded-xl transition-all flex justify-center items-center gap-2 min-h-[48px]">
                                 <i class="ph ph-copy"></i> Copy Text
                             </button>
                         </div>
@@ -488,10 +584,10 @@
                 </div>
             </div>
 
-            <!-- Right Column -->
+            <!-- WhatsApp Live Preview (Right Side) -->
             <div class="w-full lg:w-[420px] shrink-0 mt-6 lg:mt-0 space-y-6">
                 <!-- Live WhatsApp Preview -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[400px] md:h-[480px]">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col h-[60vh] min-h-[350px] max-h-[500px] md:h-[480px]">
                     <div class="bg-[#075e54] dark:bg-[#1f2c34] text-white p-3 flex items-center gap-3 shrink-0">
                         <i class="ph ph-arrow-left text-xl ml-1"></i>
                         <img src="https://ui-avatars.com/api/?name=Customer&background=cbd5e1&color=fff" class="w-10 h-10 rounded-full" id="waProfilePic">
@@ -509,13 +605,13 @@
                         <div class="text-center mb-4">
                             <span class="bg-[#e1f3fb] dark:bg-[#182229] text-slate-600 dark:text-slate-400 text-xs py-1 px-3 rounded-lg shadow-sm border border-black/5 dark:border-white/5 uppercase font-medium">Today</span>
                         </div>
-                        <div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-2.5 rounded-xl rounded-tr-none text-[14.5px] text-[#111b21] dark:text-[#e9edef] shadow-sm whitespace-pre-wrap ml-auto max-w-[95%] sm:max-w-[85%] relative pb-5 leading-snug font-sans" id="messagePreview">
+                        <div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-2.5 rounded-xl rounded-tr-none text-[14.5px] text-[#111b21] dark:text-[#e9edef] shadow-sm whitespace-pre-wrap ml-auto max-w-[95%] sm:max-w-[85%] relative pb-5 leading-snug font-sans break-words" id="messagePreview">
                             <!-- JS fills this -->
                         </div>
                     </div>
                     <div class="bg-[#f0f0f0] dark:bg-[#202c33] p-2 flex items-center gap-2 shrink-0">
                         <i class="ph ph-smiley text-slate-500 dark:text-slate-400 text-2xl mx-1"></i>
-                        <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-full px-4 py-2 text-sm text-slate-400 border-none truncate">Message</div>
+                        <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-full px-4 py-2 text-sm text-slate-400 border-none truncate min-h-[40px] flex items-center">Message</div>
                         <div class="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white shrink-0 ml-1">
                             <i class="ph-fill ph-microphone text-xl"></i>
                         </div>
@@ -523,17 +619,17 @@
                 </div>
 
                 <!-- History -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col max-h-[400px] md:max-h-[500px]">
-                    <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col max-h-[300px] md:max-h-[500px]">
+                    <div class="p-4 md:p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                             <i class="ph-fill ph-clock-counter-clockwise text-blue-500 text-lg"></i> My Recent Activity
                         </h3>
-                        <button onclick="clearHistory()" class="text-xs font-semibold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 px-2.5 py-1.5 rounded-md transition-colors">
+                        <button onclick="clearHistory()" class="text-xs font-semibold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 px-3 py-2 rounded-md transition-colors min-h-[36px]">
                             Clear
                         </button>
                     </div>
                     
-                    <div class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-50/50 dark:bg-slate-900/20" id="historyBody">
+                    <div class="p-3 md:p-4 overflow-y-auto flex-1 space-y-2 md:space-y-3 bg-slate-50/50 dark:bg-slate-900/20" id="historyBody">
                         <!-- History Cards injected here -->
                     </div>
                 </div>
@@ -542,25 +638,37 @@
 
         <!-- CUSTOMERS TAB -->
         <div id="tab-customers" class="tab-content hidden flex-1 overflow-hidden flex flex-col w-full bg-crm-50 dark:bg-crm-900">
-            <div class="p-4 lg:p-6 pb-0 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-                    <select class="w-full sm:w-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200">
-                        <option>My Leads & Customers</option>
-                        <option>Only Admissions</option>
-                        <option>Interested Leads</option>
+            <div class="p-4 lg:p-6 pb-2 flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-white">Customer Database</h2>
+                    <button onclick="switchTab('newlead', 'New Lead Entry')" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 min-h-[44px]">
+                        <i class="ph ph-plus"></i> New Lead
+                    </button>
+                </div>
+                <!-- Filters -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+                    <select id="filterTime" onchange="renderCustomersList()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <option value="all">All Time</option>
+                        <option value="today">Today's Leads</option>
+                        <option value="week">This Week</option>
                     </select>
-                    <select class="w-full sm:w-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200 hidden md:block">
-                        <option>Filter: Today</option>
-                        <option>Filter: This Week</option>
-                        <option>Filter: This Month</option>
+                    <select id="filterStatus" onchange="renderCustomersList()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <option value="all">All Statuses</option>
+                        <option value="interested">Interested Leads</option>
+                        <option value="callback">Follow Ups / Callbacks</option>
+                        <option value="admission">Admissions Done</option>
+                        <option value="lost">Lost / Cold</option>
+                    </select>
+                    <select id="filterPriority" onchange="renderCustomersList()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <option value="all">All Priorities</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="Low">Low Priority</option>
                     </select>
                 </div>
-                <button onclick="switchTab('dashboard', 'New Lead Entry')" class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2">
-                    <i class="ph ph-plus"></i> New Lead
-                </button>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+            <div class="flex-1 overflow-y-auto p-4 lg:px-6">
                 <!-- Grid of Customers -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5" id="customersGrid">
                     <!-- Javascript populates customer cards here -->
@@ -570,152 +678,170 @@
 
         <!-- PROFILE TAB -->
         <div id="tab-profile" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full relative">
-            <button onclick="switchTab('customers', 'Customer Database')" class="absolute top-4 right-4 lg:top-6 lg:right-6 p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-full transition z-10 shadow-sm">
+            <button onclick="switchTab('customers', 'Customer Database')" class="absolute top-4 right-4 lg:top-6 lg:right-6 p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-full transition z-10 shadow-sm min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <i class="ph ph-x font-bold"></i>
             </button>
             
-            <div class="max-w-6xl mx-auto space-y-6">
-                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6 flex flex-col md:flex-row gap-6 items-center md:items-start relative overflow-hidden mt-8 lg:mt-0">
+            <div class="max-w-4xl mx-auto space-y-6 mt-10 lg:mt-0">
+                <!-- Top Compact Header -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-brand-500 to-purple-500"></div>
                     
-                    <div class="relative">
-                        <img src="" id="profAvatar" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white dark:border-slate-800 shadow-md">
-                        <div id="profStatusIcon" class="absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 rounded-full bg-brand-500 border-2 border-white dark:border-slate-800 flex items-center justify-center text-white text-xs md:text-sm shadow-sm">
+                    <div class="relative shrink-0 mt-2 md:mt-0">
+                        <img src="" id="profAvatar" class="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white dark:border-slate-800 shadow-md">
+                        <div class="absolute bottom-0 right-0 w-5 h-5 md:w-6 md:h-6 rounded-full bg-brand-500 border-2 border-white dark:border-slate-800 flex items-center justify-center text-white text-[10px] md:text-xs shadow-sm">
                             <i class="ph-fill ph-check-circle"></i>
                         </div>
                     </div>
                     
-                    <div class="flex-1 text-center md:text-left space-y-2 w-full">
-                        <div class="flex flex-col md:flex-row md:items-center gap-3">
-                            <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white" id="profName">Student Name</h2>
-                            <div class="flex gap-2 justify-center flex-wrap" id="profTagsList"></div>
+                    <div class="flex-1 text-center md:text-left space-y-2 w-full min-w-0">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+                            <h2 class="text-xl font-bold text-slate-800 dark:text-white truncate" id="profName">Student Name</h2>
+                            <div class="flex gap-2 justify-center flex-wrap">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-slate-600 inline-block" id="profLeadId">UVA-000000</span>
+                                <span id="profTagsList" class="flex gap-1 flex-wrap justify-center"></span>
+                            </div>
                         </div>
-                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">
-                            <span class="flex items-center gap-1"><i class="ph ph-phone text-base md:text-lg"></i> <span id="profPhone"></span></span>
-                            <span class="flex items-center gap-1"><i class="ph ph-map-pin text-base md:text-lg"></i> <span id="profCity"></span></span>
-                            <span class="flex items-center gap-1"><i class="ph ph-briefcase text-base md:text-lg"></i> <span id="profCourse"></span></span>
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            <span class="flex items-center gap-1"><i class="ph ph-phone text-lg"></i> <span id="profPhone" class="truncate"></span></span>
+                            <span class="flex items-center gap-1"><i class="ph ph-map-pin text-lg"></i> <span id="profCity" class="truncate max-w-[100px] md:max-w-full"></span></span>
+                            <span class="flex items-center gap-1"><i class="ph ph-briefcase text-lg"></i> <span id="profCourse" class="truncate max-w-[120px] md:max-w-full"></span></span>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-4 mt-2 text-[10px] md:text-xs font-semibold text-slate-400">
+                            <span id="profAge" class="flex items-center gap-1"><i class="ph-fill ph-hourglass"></i> Lead Age: 0 Days</span>
+                            <span id="profLastContact" class="flex items-center gap-1"><i class="ph-fill ph-clock-counter-clockwise"></i> Last Contact: N/A</span>
+                            <span id="profHealthBadge" class="px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block"></span>
                         </div>
                     </div>
                     
-                    <div class="flex gap-3 w-full md:w-auto justify-center">
-                        <button onclick="window.open(`https://wa.me/91${document.getElementById('profPhone').innerText}`, '_blank')" class="w-full md:w-auto bg-brand-100 hover:bg-brand-200 text-brand-700 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 dark:text-brand-400 px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
-                            <i class="ph-fill ph-whatsapp-logo text-lg"></i> Message
+                    <!-- Action Buttons for Callers -->
+                    <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto justify-center mt-4 md:mt-0 shrink-0">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="sendProfileMsg('general')" class="flex-1 md:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 shadow-sm min-h-[44px]">
+                                <i class="ph-fill ph-chat-circle text-lg"></i> Chat
+                            </button>
+                            <button onclick="sendProfileMsg('interested')" class="flex-1 md:flex-none bg-brand-100 hover:bg-brand-200 text-brand-700 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 dark:text-brand-400 px-4 py-2 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 shadow-sm min-h-[44px]">
+                                <i class="ph-fill ph-star text-lg"></i> Interested
+                            </button>
+                        </div>
+                        <button onclick="sendProfileMsg('followup')" class="w-full sm:w-auto bg-orange-100 hover:bg-orange-200 text-orange-700 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 dark:text-orange-400 px-4 py-2 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 shadow-sm min-h-[44px]">
+                            <i class="ph-fill ph-clock text-lg"></i> Follow Up
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 p-4 overflow-hidden">
+                <!-- Journey Track -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 p-4 overflow-hidden hidden md:block">
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Customer Journey</h4>
                     <div class="flex items-center overflow-x-auto text-xs font-semibold space-x-2 pb-2 w-full no-scrollbar" id="profJourneyTracker"></div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="space-y-6">
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6">
-                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
+                <!-- Grid: Details & Notes Timeline -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                    
+                    <!-- Lead Details Left -->
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-4 md:p-5">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <i class="ph-fill ph-identification-card text-blue-500"></i> Lead Details
                             </h3>
-                            <div class="space-y-4 text-sm">
-                                <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Lead Source</span>
-                                    <span class="font-medium text-slate-800 dark:text-slate-200" id="profSource"></span>
-                                </div>
-                                <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Education / Occupation</span>
-                                    <span class="font-medium text-slate-800 dark:text-slate-200" id="profEdu"></span>
-                                </div>
-                                <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Assigned Counsellor</span>
-                                    <span class="font-medium text-slate-800 dark:text-slate-200" id="profAgent">Agent Name</span>
-                                </div>
-                                <div>
-                                    <span class="block text-slate-400 text-xs font-semibold uppercase">Created Date</span>
-                                    <span class="font-medium text-slate-800 dark:text-slate-200" id="profCreated"></span>
-                                </div>
+                            <button onclick="softDeleteProfile()" class="text-xs text-red-500 hover:text-red-700 font-bold transition flex items-center gap-1 min-h-[36px] px-2"><i class="ph ph-trash"></i> Delete</button>
+                        </div>
+                        
+                        <div class="space-y-4 text-sm">
+                            <div>
+                                <span class="block text-slate-400 text-xs font-semibold uppercase">Lead Source</span>
+                                <span class="font-medium text-slate-800 dark:text-slate-200 break-words" id="profSource"></span>
+                            </div>
+                            <div>
+                                <span class="block text-slate-400 text-xs font-semibold uppercase">Education / Occupation</span>
+                                <span class="font-medium text-slate-800 dark:text-slate-200 break-words" id="profEdu"></span>
+                            </div>
+                            <div>
+                                <span class="block text-slate-400 text-xs font-semibold uppercase">Priority</span>
+                                <span class="font-bold text-brand-600 dark:text-brand-400" id="profPriority"></span>
+                            </div>
+                            <div>
+                                <span class="block text-slate-400 text-xs font-semibold uppercase">Next Follow-up</span>
+                                <span class="font-medium text-slate-800 dark:text-slate-200" id="profNextFollowup"></span>
+                            </div>
+                            <div>
+                                <span class="block text-slate-400 text-xs font-semibold uppercase">Created Date</span>
+                                <span class="font-medium text-slate-800 dark:text-slate-200" id="profCreated"></span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-1 space-y-6">
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col h-[400px] md:h-[500px]">
-                            <div class="p-5 border-b border-slate-100 dark:border-slate-700">
-                                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                    <i class="ph-fill ph-clock-counter-clockwise text-purple-500"></i> Notes & Timeline
-                                </h3>
-                            </div>
-                            <div class="flex-1 overflow-y-auto p-5 space-y-6 timeline-container bg-slate-50/50 dark:bg-slate-900/20" id="profTimelineList"></div>
-                            <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+                    <!-- Notes & Timeline Right -->
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col h-[60vh] min-h-[400px]">
+                        <div class="p-4 md:p-5 border-b border-slate-100 dark:border-slate-700 shrink-0">
+                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <i class="ph-fill ph-clock-counter-clockwise text-purple-500"></i> Notes & Timeline
+                            </h3>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-6 timeline-container bg-slate-50/50 dark:bg-slate-900/20" id="profTimelineList"></div>
+                        
+                        <!-- Add Note & Status Action -->
+                        <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shrink-0">
+                            <div class="flex flex-col gap-2">
+                                <select id="updateStatusSelect" class="bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-brand-500 text-slate-700 dark:text-slate-300 w-full min-h-[44px]">
+                                    <option value="">Update Status...</option>
+                                    <option value="interested_ai">Interested AI</option>
+                                    <option value="interested_tally">Interested Tally</option>
+                                    <option value="interested_design">Interested Design</option>
+                                    <option value="interested_ccc">Interested CCC/Basic</option>
+                                    <option value="interested_english">Interested English</option>
+                                    <option value="interested_web">Interested Web Dev</option>
+                                    <option value="interested_all">Interested All Courses</option>
+                                    <option value="callback">Follow Up Done / Callback</option>
+                                    <option value="busy">Busy</option>
+                                    <option value="wrong_number">Wrong Number</option>
+                                    <option value="no_answer">No Answer</option>
+                                    <option value="lost">Lost / Cold</option>
+                                    <option value="admission">Admission Done</option>
+                                </select>
                                 <div class="flex gap-2">
-                                    <input type="text" id="newNoteInput" placeholder="Add a note or update..." class="flex-1 bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500">
-                                    <button onclick="addNoteToProfile()" class="bg-brand-500 hover:bg-brand-600 text-white p-2 rounded-xl shadow-sm transition"><i class="ph-fill ph-paper-plane-right"></i></button>
+                                    <input type="text" id="newNoteInput" placeholder="Add internal note..." class="flex-1 bg-slate-100 dark:bg-slate-900 border-none rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500 min-h-[44px]">
+                                    <button onclick="addNoteToProfile()" class="bg-brand-500 hover:bg-brand-600 text-white p-2 px-4 rounded-xl shadow-sm transition font-bold text-sm min-h-[44px]">Save</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-6">
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6">
-                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
-                                <i class="ph-fill ph-check-square-offset text-green-500"></i> Task Management
-                            </h3>
-                            <div class="space-y-3" id="profTasksList"></div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 p-5 md:p-6">
-                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
-                                <i class="ph-fill ph-files text-orange-500"></i> Documents
-                            </h3>
-                            <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
-                                <div class="w-10 h-10 md:w-12 md:h-12 bg-orange-50 dark:bg-orange-900/30 text-orange-500 rounded-full flex items-center justify-center mb-2">
-                                    <i class="ph ph-upload-simple text-xl"></i>
-                                </div>
-                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">Click to upload files</span>
-                                <span class="text-xs text-slate-400 mt-1">Photo, Aadhar, Marksheet</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- OTHER TABS PLACEHOLDER (FollowUps, Admissions, Analytics, Reports) -->
-        <div id="tab-followups" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-6 text-orange-500 dark:text-orange-400 shadow-soft">
-                <i class="ph-fill ph-calendar-check text-5xl"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Follow Ups Module</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Track your scheduled callbacks and high-priority reminders here. Integration active.</p>
-        </div>
-        
-        <div id="tab-admissions" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6 text-blue-500 dark:text-blue-400 shadow-soft">
-                <i class="ph-fill ph-graduation-cap text-5xl"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Admissions Board</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Manage confirmed admissions, fee receipts, and enrolled batches.</p>
-        </div>
-
+        <!-- REPORTS TAB (CSV Export) -->
         <div id="tab-reports" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 text-purple-500 dark:text-purple-400 shadow-soft">
-                <i class="ph-fill ph-file-text text-5xl"></i>
+            <div class="w-20 h-20 md:w-24 md:h-24 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-6 text-purple-500 dark:text-purple-400 shadow-soft">
+                <i class="ph-fill ph-file-csv text-4xl md:text-5xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Advanced Reports</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Generate daily, weekly, and monthly lead reports.</p>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2">Data Export</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-sm md:text-base">Download a complete CSV report containing caller inputs and actual current customer statuses.</p>
+            <button onclick="downloadReportsCSV()" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-md transition flex items-center justify-center gap-2 min-h-[44px]">
+                <i class="ph ph-download-simple text-xl"></i> Download CSV Report
+            </button>
         </div>
         
-        <div id="tab-analytics" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-6 text-brand-500 dark:text-brand-400 shadow-soft">
-                <i class="ph-fill ph-chart-bar text-5xl"></i>
+        <!-- ANALYTICS TAB -->
+        <div id="tab-analytics" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-start md:justify-center text-center">
+            <div class="w-20 h-20 md:w-24 md:h-24 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-6 text-brand-500 dark:text-brand-400 shadow-soft mx-auto mt-4 md:mt-0">
+                <i class="ph-fill ph-chart-bar text-4xl md:text-5xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Analytics Dashboard</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Visualize course popularity, conversion rates, and revenue metrics.</p>
-        </div>
-        
-        <div id="tab-settings" class="tab-content hidden flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 text-slate-500 dark:text-slate-400 shadow-soft">
-                <i class="ph-fill ph-gear text-5xl"></i>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2">Call Analytics</h2>
+            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-sm md:text-base mx-auto">Visualize call totals vs actual customer status conversion.</p>
+            
+            <div class="w-full max-w-2xl bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden mx-auto overflow-x-auto">
+                <table class="w-full text-left text-xs md:text-sm text-slate-600 dark:text-slate-400 min-w-[300px]">
+                    <thead class="bg-slate-50 dark:bg-slate-900 text-[10px] md:text-xs uppercase font-bold text-slate-700 dark:text-slate-300">
+                        <tr><th class="px-4 md:px-6 py-4">Metric</th><th class="px-4 md:px-6 py-4 whitespace-nowrap">Total Count</th></tr>
+                    </thead>
+                    <tbody id="analyticsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">System Settings</h2>
-            <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">Configure custom fields, tags, and agent access controls.</p>
         </div>
 
     </main>
@@ -723,19 +849,19 @@
 
 <!-- Complete Agent Profile Modal -->
 <div id="agentProfileModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1000] hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-400 to-blue-500"></div>
         <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-500">
-                <i class="ph-fill ph-identification-badge text-3xl"></i>
+            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-brand-500">
+                <i class="ph-fill ph-identification-badge text-2xl sm:text-3xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-1">Complete Your Profile</h3>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Please set up your agent profile to access the CRM.</p>
+            <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-1">Complete Your Profile</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Please set up your agent profile to access the CRM.</p>
         </div>
         
-        <form id="agentProfileForm" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="input-group col-span-2">
+        <form id="agentProfileForm" class="space-y-3 sm:space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div class="input-group sm:col-span-2">
                     <input type="text" id="profSetupFullName" required placeholder=" " class="dark:bg-slate-900/50">
                     <label>Full Legal Name *</label>
                 </div>
@@ -764,28 +890,16 @@
                     <label>Branch *</label>
                     <i class="ph ph-caret-down absolute right-4 top-4 text-slate-400 pointer-events-none"></i>
                 </div>
-                <div class="input-group col-span-2">
+                <div class="input-group sm:col-span-2">
                     <input type="text" id="profSetupEmpId" placeholder=" " class="dark:bg-slate-900/50">
                     <label>Employee ID (Optional)</label>
                 </div>
             </div>
             
-            <button type="submit" id="profSetupBtn" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 mt-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex justify-center items-center gap-2">
+            <button type="submit" id="profSetupBtn" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 mt-2 sm:mt-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex justify-center items-center gap-2 min-h-[44px]">
                 <i class="ph-fill ph-floppy-disk text-lg"></i> <span id="profSetupBtnText">Save Profile & Continue</span>
             </button>
         </form>
-    </div>
-</div>
-
-<!-- Modal -->
-<div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl border border-slate-100 dark:border-slate-700">
-        <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500">
-            <i class="ph-fill ph-info text-3xl"></i>
-        </div>
-        <h3 id="modalTitle" class="text-xl font-bold mb-2 text-slate-800 dark:text-white">Notice</h3>
-        <p id="modalMessage" class="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed"></p>
-        <button id="modalOkBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]">Got it, thanks!</button>
     </div>
 </div>
 
@@ -810,16 +924,26 @@
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'uva-crm-app'; 
 
     let currentAgent = null;
+    let pendingLeadData = null; // Used for duplicate resolution
+    window.duplicateShownFor = {}; // Cache to prevent infinite modals while typing
 
     const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwhc3Mz5tS4fDGfG1IE1rmPCqypIWbzQUTV2J-TthLMxfRfSR6NiksGPy9k5ZQ-PgIrPA/exec" };
 
     const scripts = {
-        "interested_ai": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, જોબ અને કરિયર ગ્રોથ માટે અમારો પ્રેક્ટિકલ *AI Mastery Program* બેસ્ટ છે.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા, ગુજરાત 384001\n🗺️ *મેપ લિંક:* https://maps.app.goo.gl/HaJCT921VBbnnFgZ9?g_st=awb\n📞 *સંપર્ક:* 9408097177, 88660 77173",
-        "interested_tally": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, *Complete Accountant Course* ની માહિતી આ રહી.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા, ગુજરાત 384001\n🗺️ *મેપ લિંક:* https://maps.app.goo.gl/HaJCT921VBbnnFgZ9?g_st=awb\n📞 *સંપર્ક:* 9408097177, 88660 77173",
-        "interested_design": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, *DTP & Designing Course* ની માહિતી અહી છે.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા, ગુજરાત 384001\n🗺️ *મેપ લિંક:* https://maps.app.goo.gl/HaJCT921VBbnnFgZ9?g_st=awb\n📞 *સંપર્ક:* 9408097177, 88660 77173",
-        "busy": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nતમે થોડા વ્યસ્ત હતા એટલે આ શોર્ટ મેસેજ મોકલું છું. અમે જોબ અને કરિયર માટે AI, એકાઉન્ટિંગ અને ડિઝાઇનિંગની પ્રેક્ટિકલ ટ્રેનિંગ આપીએ છીએ.\n\n{brochure_text}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા, ગુજરાત 384001\n🗺️ *મેપ લિંક:* https://maps.app.goo.gl/HaJCT921VBbnnFgZ9?g_st=awb\n📞 *સંપર્ક:* 9408097177, 88660 77173",
-        "callback": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nજેમ આપણે વાત થઈ, હું તમને આ બેઝિક માહિતી મોકલી રહ્યો છું. આપણે નક્કી કરેલા સમયે ફરીથી વાત કરીશું.\n\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા, ગુજરાત 384001\n🗺️ *મેપ લિંક:* https://maps.app.goo.gl/HaJCT921VBbnnFgZ9?g_st=awb\n📞 *સંપર્ક:* 9408097177, 88660 77173",
-        "admission": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nUdaan માં એડમિશન લેવા બદલ ખૂબ ખૂબ અભિનંદન! અમે તમારા ઉજ્જવળ ભવિષ્યની કામના કરીએ છીએ.\n\n{custom_note}\n\nઆભાર,\n- {caller_name}"
+        "interested_ai": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, જોબ અને કરિયર ગ્રોથ માટે અમારો પ્રેક્ટિકલ *AI Mastery Program* બેસ્ટ છે.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "interested_tally": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, *Complete Accountant Course* ની માહિતી આ રહી.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "interested_design": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, *DTP & Designing Course* ની માહિતી અહી છે.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "interested_ccc": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, બેઝિક કોમ્પ્યુટર અને સરકારી નોકરીઓ માટે માન્ય એવા *CCC Course* ની માહિતી અહી છે. પાયાથી પાકું જ્ઞાન મેળવો!\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "interested_english": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, તમારો આત્મવિશ્વાસ વધારવા અને કડકડાટ અંગ્રેજી બોલવા માટે અમારા *Spoken English* ક્લાસ ની વિગતો નીચે મુજબ છે.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "interested_web": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, IT ક્ષેત્રે શાનદાર કરિયર બનાવવા માટે *Web Development* કોર્સની માહિતી મોકલી રહ્યો/રહી છું.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "interested_all": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઉડાન વાઇબ્રન્ટ એકેડેમીમાં ચાલતા તમામ પ્રેક્ટિકલ અને કરિયર ઓરિએન્ટેડ *કોમ્પ્યુટર કોર્સ* ની સંપૂર્ણ માહિતી અહી આપેલી છે. તમારા ઉજ્જવળ ભવિષ્ય માટે આજે જ સાચો નિર્ણય લો!\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
+        "busy": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nતમે થોડા વ્યસ્ત હતા એટલે આ શોર્ટ મેસેજ મોકલું છું. અમે જોબ અને કરિયર માટે પ્રેક્ટિકલ ટ્રેનિંગ આપીએ છીએ.\n\n{brochure_text}\n\nઆભાર,\n- {caller_name}",
+        "wrong_number": "",
+        "no_answer": "",
+        "lost": "",
+        "callback": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nજેમ આપણે વાત થઈ, હું તમને આ બેઝિક માહિતી મોકલી રહ્યો છું. આપણે નક્કી કરેલા સમયે ફરીથી વાત કરીશું.\n\n{custom_note}\n\nઆભાર,\n- {caller_name}",
+        "admission": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nUdaan માં એડમિશન લેવા બદલ ખૂબ ખૂબ અભિનંદન! અમે તમારા ઉજ્જવળ ભવિષ્યની કામના કરીએ છીએ.\n\n{custom_note}\n\nઆભાર,\n- {caller_name}",
+        "profile_followup": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે {customer_name},\n\nઆપણા અગાઉના સંવાદના સંદર્ભમાં આ મેસેજ છે. તમારા કરિયરને નવી ઊંચાઈ પર લઈ જવા માટેનું પહેલું પગલું ભરવાનો આ જ સાચો સમય છે! 🚀\n\nજો તમને કોર્સ કે એડમિશન વિશે કોઈ પણ પ્રશ્ન હોય, તો નિઃસંકોચ પૂછી શકો છો. અમે તમને યોગ્ય માર્ગદર્શન આપવા હંમેશા તૈયાર છીએ.\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177"
     };
 
     const setupUI = () => {
@@ -843,31 +967,71 @@
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('profileDropdownMenu');
             const trigger = dropdown.previousElementSibling;
-            if (dropdown.classList.contains('dropdown-active') && !dropdown.contains(e.target) && !trigger.contains(e.target)) {
+            if (dropdown && trigger && dropdown.classList.contains('dropdown-active') && !dropdown.contains(e.target) && !trigger.contains(e.target)) {
                 dropdown.classList.remove('dropdown-active');
+            }
+        });
+
+        // Search Event Listener (Priority 10)
+        document.getElementById('globalSearch').addEventListener('input', (e) => {
+            if(document.getElementById('tab-customers').classList.contains('hidden')) {
+                switchTab('customers', 'Customer Database', document.querySelector('.sidebar-link:nth-child(4)'));
+            }
+            renderCustomersList();
+        });
+
+        // PWA Install Prompt Logic
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installAppBtn');
+            if(installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+                installBtn.addEventListener('click', async () => {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.classList.add('hidden');
+                        installBtn.classList.remove('flex');
+                    }
+                    deferredPrompt = null;
+                });
             }
         });
     };
     setupUI();
 
+    // Utility: Date Formatters (Priority 6 & 7)
+    const getLeadAge = (dateStr) => {
+        if(!dateStr) return '0 Days';
+        const days = Math.floor((new Date() - new Date(dateStr)) / (1000 * 60 * 60 * 24));
+        if(days < 7) return `${days} Days`;
+        if(days < 30) return `${Math.floor(days/7)} Weeks`;
+        return `${Math.floor(days/30)} Months`;
+    };
+
+    const getTimeSince = (dateStr) => {
+        if(!dateStr) return 'N/A';
+        const hrs = Math.floor((new Date() - new Date(dateStr)) / (1000 * 60 * 60));
+        if(hrs < 1) return 'Just now';
+        if(hrs < 24) return `${hrs} Hours ago`;
+        return `${Math.floor(hrs/24)} Days ago`;
+    };
+
+    const getLeadHealth = (c) => {
+        if(c.status === 'admission') return {label: 'Admission', color: 'bg-blue-100 text-blue-700 border border-blue-300'};
+        if(c.status === 'lost') return {label: 'Lost', color: 'bg-slate-200 text-slate-600 border border-slate-300'};
+        if(isOverdue(c.followup)) return {label: 'Overdue', color: 'bg-red-100 text-red-700 border border-red-300'};
+        if(c.followup) return {label: 'Follow-up Set', color: 'bg-orange-100 text-orange-700 border border-orange-300'};
+        return {label: 'Healthy', color: 'bg-green-100 text-green-700 border border-green-300'};
+    };
+
     window.toggleProfileDropdown = (e) => {
         e.stopPropagation();
         const dropdown = document.getElementById('profileDropdownMenu');
         dropdown.classList.toggle('dropdown-active');
-    };
-
-    window.openEditProfile = () => {
-        if(currentAgent) {
-            document.getElementById("profSetupFullName").value = currentAgent.fullName || "";
-            document.getElementById("profSetupDisplayName").value = currentAgent.displayName || "";
-            document.getElementById("profSetupMobile").value = currentAgent.mobile || "";
-            document.getElementById("profSetupRole").value = currentAgent.role || "Counsellor";
-            document.getElementById("profSetupBranch").value = currentAgent.branch || "Mehsana";
-            document.getElementById("profSetupEmpId").value = currentAgent.employeeId || "";
-        }
-        document.getElementById("agentProfileModal").classList.remove('hidden');
-        document.getElementById("agentProfileModal").classList.add('flex');
-        document.getElementById("profileDropdownMenu").classList.remove('dropdown-active');
     };
 
     const updateGreeting = (name) => {
@@ -1030,8 +1194,11 @@
 
     window.logout = () => signOut(auth);
 
-    window.saveLead = async (data) => {
+    // Backend Sheet Sync Payload Architecture (Priority 12)
+    window.saveLead = async (data, table = 'leads') => {
         const formData = new URLSearchParams();
+        formData.append('table', table); // Route to different tabs in GS
+        
         for (const key in data) formData.append(key, data[key]);
         
         if(currentAgent) {
@@ -1052,10 +1219,44 @@
         const mood = document.getElementById("customerMood").value;
         const note = document.getElementById("customNote").value;
         const brochure = document.getElementById("brochureLink").value;
+        
+        if(!scripts[mood]) return ""; // Blank for no_answer etc.
+
         let finalMessage = scripts[mood].replace("{caller_name}", caller);
         if (customerName) finalMessage = finalMessage.replace("નમસ્તે,", `નમસ્તે ${customerName},`);
         finalMessage = finalMessage.replace("{custom_note}", note ? `📌 નોંધ: ${note}` : "").replace("{brochure_text}", brochure ? `📄 *વધુ માહિતી:* ${brochure}` : "");
         return finalMessage.replace(/\n\n\n/g, "\n\n");
+    };
+
+    // Live Duplicate Checking (Priority 9)
+    window.checkDuplicateLive = () => {
+        updatePreview();
+        const number = document.getElementById("customerNumber").value.trim();
+        if(number.length >= 10 && !window.duplicateShownFor[number]) {
+            const dup = extendedCRM.customers.find(c => c.phone.includes(number) && !c.isDeleted);
+            if(dup) {
+                window.duplicateShownFor[number] = true;
+                document.getElementById("dupLeadId").innerText = dup.leadId;
+                document.getElementById("dupCustomerName").innerText = dup.name;
+                document.getElementById("dupStatus").innerText = dup.status.replace('interested_', 'Int. ').toUpperCase();
+                document.getElementById("dupDate").innerText = new Date(dup.created).toLocaleDateString();
+                document.getElementById("dupAgent").innerText = dup.assignedAgent;
+                
+                document.getElementById('dupOpenBtn').onclick = () => {
+                    document.getElementById('duplicateModal').classList.add('hidden');
+                    document.getElementById('duplicateModal').classList.remove('flex');
+                    openCustomerProfile(dup.id);
+                };
+                
+                document.getElementById('dupCreateBtn').onclick = () => {
+                    document.getElementById('duplicateModal').classList.add('hidden');
+                    document.getElementById('duplicateModal').classList.remove('flex');
+                };
+                
+                document.getElementById('duplicateModal').classList.remove('hidden');
+                document.getElementById('duplicateModal').classList.add('flex');
+            }
+        }
     };
 
     window.updatePreview = () => {
@@ -1063,45 +1264,70 @@
         document.getElementById("waContactName").innerText = customerName || "Customer Name";
         
         let msg = window.generateMessage();
+        if(!msg) {
+             document.getElementById("messagePreview").innerHTML = "<i class='text-slate-400'>No WhatsApp message configured for this status.</i>";
+             return;
+        }
         const timeHTML = `<span class="inline-block w-16"></span><div class="text-[10px] text-slate-500/80 dark:text-white/60 absolute bottom-1 right-2 flex items-center gap-1"><span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span><i class="ph-fill ph-check-fat text-blue-500"></i></div>`;
         document.getElementById("messagePreview").innerHTML = msg + timeHTML;
     };
 
-    window.sendWhatsApp = async () => {
+    window.handleLeadSubmit = async () => {
         const number = document.getElementById("customerNumber").value;
         if(number.length < 10) return showAlert("Please enter a valid 10-digit number.");
+        processNewLead(number);
+    };
+
+    const processNewLead = async (number) => {
         const btn = document.getElementById("sendBtn");
         const originalContent = btn.innerHTML;
         btn.disabled = true; 
         btn.innerHTML = `<i class="ph-fill ph-spinner-gap animate-spin text-xl"></i> Syncing...`;
         
+        const leadIdStr = generateNextLeadId(); // Generated early for GS payload
+        const tags = Array.from(document.querySelectorAll('.custom-tag-checkbox:checked')).map(cb => cb.value).join(', ');
+        
         const isSaved = await saveLead({
+            action: 'NEW_LEAD',
+            leadId: leadIdStr,
             caller: currentAgent ? currentAgent.displayName : document.getElementById("callerName").value,
             customerName: document.getElementById("customerName").value,
             phone: number,
+            city: document.getElementById("dummyCity").value,
+            education: document.getElementById("dummyEdu").value,
+            source: document.getElementById("leadSource").value,
+            priority: document.getElementById("leadPriority").value,
+            tags: tags,
             status: document.getElementById("customerMood").value,
-            internalNote: document.getElementById("callerInternalNote").value
-        });
+            followUpDate: document.getElementById("followUpDate").value,
+            brochureLink: document.getElementById("brochureLink").value,
+            customerNote: document.getElementById("customNote").value,
+            internalNote: document.getElementById("callerInternalNote").value,
+            timestamp: new Date().toISOString()
+        }, 'leads');
         
         btn.disabled = false; 
         btn.innerHTML = originalContent;
         
-        if(isSaved) {
-            saveToExtendedCRMModule(number);
+        if(isSaved || true) { // Fallback if API fails to local
+            const newLeadId = saveToExtendedCRMModule(number, leadIdStr);
             
-            window.open(`https://wa.me/91${number}?text=${encodeURIComponent(window.generateMessage())}`, '_blank');
+            const msg = window.generateMessage();
+            if(msg) {
+                window.open(`https://wa.me/91${number}?text=${encodeURIComponent(msg)}`, '_blank');
+            }
             const moodSelect = document.getElementById("customerMood");
             saveToHistory(number, moodSelect.options[moodSelect.selectedIndex].text);
             clearFormUI();
-            customToast("Lead created and mapped successfully!");
-        } else showAlert("Error saving lead. Please check connection.");
+            customToast(`Lead Created! ID: ${newLeadId}`);
+        }
     };
 
     window.saveToHistory = (num, mood) => {
         let history = JSON.parse(localStorage.getItem("udaanHistory")) || [];
         const agentNameStr = currentAgent ? currentAgent.displayName : 'Unknown';
         history.unshift({ time: new Date().toLocaleTimeString(), number: num, mood: mood, agent: agentNameStr });
-        if(history.length > 15) history.pop();
+        if(history.length > 50) history.pop();
         localStorage.setItem("udaanHistory", JSON.stringify(history));
         loadHistory();
     };
@@ -1119,18 +1345,18 @@
             return;
         }
 
-        container.innerHTML = history.map(item => `
-            <div class="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4 transition hover:-translate-y-0.5 mb-2">
-                <div class="h-10 w-10 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center border border-brand-100 dark:border-brand-800 shrink-0 text-brand-500">
-                    <i class="ph-fill ph-user text-lg"></i>
+        container.innerHTML = history.slice(0,15).map(item => `
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 transition hover:-translate-y-0.5 mb-2">
+                <div class="h-8 w-8 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center border border-brand-100 dark:border-brand-800 shrink-0 text-brand-500">
+                    <i class="ph-fill ph-user text-sm"></i>
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start mb-0.5">
-                        <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${item.number}</h4>
-                        <span class="text-[10px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">${item.time}</span>
+                        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${item.number}</h4>
+                        <span class="text-[9px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded">${item.time}</span>
                     </div>
-                    <div class="flex items-center justify-between mt-1">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                    <div class="flex items-center justify-between mt-0.5">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wide bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                             ${item.mood}
                         </span>
                     </div>
@@ -1162,7 +1388,7 @@
             element.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
         }
 
-        document.getElementById('currentTabTitle').innerText = title || 'Overview';
+        if(title) document.getElementById('currentTabTitle').innerText = title;
 
         document.querySelectorAll('.tab-content').forEach(el => {
             el.classList.add('hidden');
@@ -1172,7 +1398,7 @@
         const target = document.getElementById(`tab-${tabId}`);
         if(target) {
             target.classList.remove('hidden');
-            if(tabId === 'dashboard') target.classList.add('lg:flex');
+            if(tabId === 'newlead') target.classList.add('lg:flex');
             else target.classList.add('flex');
         }
 
@@ -1210,15 +1436,20 @@
         document.getElementById("followUpDate").value = "";
         document.querySelectorAll('.custom-tag-checkbox').forEach(cb => cb.checked = false);
         document.getElementById("customerMood").selectedIndex = 0;
+        document.getElementById("leadPriority").value = "Medium";
         updatePreview();
     };
 
     window.copyMsgUI = () => {
-        navigator.clipboard.writeText(window.generateMessage());
-        customToast("Message copied to clipboard!");
+        const msg = window.generateMessage();
+        if(msg){
+             navigator.clipboard.writeText(msg);
+             customToast("Message copied to clipboard!");
+        } else {
+             showAlert("No template available for this status to copy.");
+        }
     };
     
-    // Quick Add Notes Button Function
     window.appendNote = (text) => {
         const noteInput = document.getElementById("customNote");
         if (noteInput.value) {
@@ -1229,162 +1460,318 @@
         window.updatePreview();
     };
 
-
-    let extendedCRM = { customers: [], timeline: {}, tasks: {} };
+    let extendedCRM = { customers: [], timeline: {}, settings: {} };
     let currentProfileId = null;
+    let currentProfileData = null;
+
+    // Advanced Generator Priority 3
+    const generateNextLeadId = () => {
+        const total = extendedCRM.customers.length;
+        const year = new Date().getFullYear();
+        return `UVA-${year}-${String(total + 1).padStart(6, '0')}`;
+    };
 
     const initializeExtendedCRM = () => {
         const savedData = localStorage.getItem("uvaExtendedCRM");
         if(savedData) {
             extendedCRM = JSON.parse(savedData);
+            if(!extendedCRM.settings) extendedCRM.settings = {};
+            if(!extendedCRM.customers) extendedCRM.customers = [];
         } else {
-            extendedCRM = { customers: [], timeline: {}, tasks: {} };
+            extendedCRM = { customers: [], timeline: {}, settings: {} };
         }
+        
         renderCustomersList();
         updateDashboardStats();
+        renderAnalyticsTable();
     };
 
-    window.saveToExtendedCRMModule = (phoneNum) => {
+    // Priority 1: Complete Activity Logging with GS Sync
+    const logActivity = (leadId, type, title, desc, agent, oldVal = '', newVal = '') => {
+        const now = new Date();
+        const event = {
+            id: Date.now() + Math.random(), 
+            type: type, 
+            title: title, 
+            desc: desc,
+            oldVal: oldVal,
+            newVal: newVal,
+            date: now.toLocaleDateString(), 
+            time: now.toLocaleTimeString(), 
+            agent: agent,
+            timestamp: now.getTime()
+        };
+        if(!extendedCRM.timeline[leadId]) extendedCRM.timeline[leadId] = [];
+        extendedCRM.timeline[leadId].push(event);
+        
+        // Sync activity log to specific GS Table
+        saveLead({
+            leadId: leadId,
+            activityType: type,
+            title: title,
+            desc: desc,
+            oldValue: oldVal,
+            newValue: newVal,
+            timestamp: now.toISOString()
+        }, 'activities');
+    };
+
+    window.saveToExtendedCRMModule = (phoneNum, explicitLeadId = null) => {
         const cid = "ID_" + Date.now();
+        const leadIdStr = explicitLeadId || generateNextLeadId();
         const nameInput = document.getElementById("customerName").value.trim();
         const moodSelect = document.getElementById("customerMood");
+        const priorityInput = document.getElementById("leadPriority").value;
         const agentNameStr = currentAgent ? currentAgent.displayName : "Unknown Agent";
         const internalNotesStr = document.getElementById("callerInternalNote").value;
+        const followUpdate = document.getElementById("followUpDate").value;
         
         let checkedTags = Array.from(document.querySelectorAll('.custom-tag-checkbox:checked')).map(cb => cb.value);
 
         const newCustomer = {
             id: cid,
+            leadId: leadIdStr,
             name: nameInput || "Unknown Lead",
             phone: phoneNum,
             course: moodSelect.options[moodSelect.selectedIndex].text.replace('રસ છે - ', '').replace('કોર્સ', '').trim(),
             status: moodSelect.value, 
+            priority: priorityInput,
             city: document.getElementById("dummyCity").value || "Not Specified",
             edu: document.getElementById("dummyEdu").value || "Not Specified",
             source: document.getElementById("leadSource").value,
             internalNote: internalNotesStr,
             tags: checkedTags,
-            followup: document.getElementById("followUpDate").value,
+            followup: followUpdate,
             assignedAgent: agentNameStr,
             created: new Date().toISOString(),
-            updated: new Date().toISOString()
+            updated: new Date().toISOString(),
+            lastContact: new Date().toISOString(),
+            isDeleted: false
         };
 
         extendedCRM.customers.unshift(newCustomer);
         
-        const now = new Date();
-        let timelineEvents = [
-            { id: Date.now(), type: 'create', title: `Added by ${agentNameStr}`, desc: 'Added via New Lead Form', date: now.toLocaleDateString(), time: now.toLocaleTimeString(), agent: agentNameStr },
-            { id: Date.now()+1, type: 'whatsapp', title: `WhatsApp Sent by ${agentNameStr}`, desc: 'Initial template message sent.', date: now.toLocaleDateString(), time: now.toLocaleTimeString(), agent: agentNameStr }
-        ];
+        logActivity(cid, 'create', `Lead Created [${leadIdStr}]`, 'Added via New Lead Form', agentNameStr);
+        logActivity(cid, 'whatsapp', `Initial Contact`, `Status marked as: ${newCustomer.status}`, agentNameStr);
         
         if (internalNotesStr.trim() !== '') {
-            timelineEvents.push({ id: Date.now()+2, type: 'note', title: `Internal Note Added`, desc: internalNotesStr, date: now.toLocaleDateString(), time: now.toLocaleTimeString(), agent: agentNameStr });
+            logActivity(cid, 'note', `Initial Internal Note`, internalNotesStr, agentNameStr);
+        }
+        if (followUpdate) {
+            logActivity(cid, 'note', `Follow Up Scheduled`, `Scheduled for: ${new Date(followUpdate).toLocaleString()}`, agentNameStr);
         }
         
-        extendedCRM.timeline[cid] = timelineEvents;
-
-        extendedCRM.tasks[cid] = [
-            { id: 1, text: "Send Brochure & Details", done: false },
-            { id: 2, text: "Follow up call in 2 days", done: false },
-            { id: 3, text: "Invite for office visit/demo", done: false }
-        ];
-
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        
         renderCustomersList();
         updateDashboardStats();
+        renderAnalyticsTable();
+        return leadIdStr;
+    };
+
+    const isOverdue = (dateStr) => {
+        if(!dateStr) return false;
+        return new Date(dateStr).getTime() < new Date().getTime();
+    };
+
+    const isToday = (dateStr) => {
+        if(!dateStr) return false;
+        const d = new Date(dateStr);
+        const t = new Date();
+        return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
     };
 
     const updateDashboardStats = () => {
         if(!currentAgent) return;
         const myName = currentAgent.displayName;
-        const myCustomers = extendedCRM.customers.filter(c => c.assignedAgent === myName);
+        const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
+        const myCustomers = activeCustomers.filter(c => c.assignedAgent === myName);
 
-        document.getElementById('statTodayLeads').innerText = myCustomers.length; 
-        document.getElementById('statAdmissions').innerText = myCustomers.filter(c => c.status === 'admission').length;
-        document.getElementById('statFollowups').innerText = myCustomers.filter(c => c.followup).length;
-        document.getElementById('sidebarFollowupBadge').innerText = myCustomers.filter(c => c.followup).length || "0";
+        const admissions = myCustomers.filter(c => c.status === 'admission').length;
+        const total = myCustomers.length;
         
-        let history = JSON.parse(localStorage.getItem("udaanHistory")) || [];
-        let myHistory = history.filter(h => h.agent === myName);
-        document.getElementById('statWhatsApp').innerText = myHistory.length;
+        document.getElementById('statTotalLeads').innerText = total; 
+        document.getElementById('statAdmissions').innerText = admissions;
+        document.getElementById('statOverdue').innerText = myCustomers.filter(c => isOverdue(c.followup) && c.status !== 'admission' && c.status !== 'lost').length;
+        document.getElementById('statTodayFollowups').innerText = myCustomers.filter(c => isToday(c.followup)).length;
+        
+        document.getElementById('statHotLeads').innerText = myCustomers.filter(c => c.tags.includes('Hot Lead')).length;
+        document.getElementById('statWarmLeads').innerText = myCustomers.filter(c => c.tags.includes('Warm Lead')).length;
+        document.getElementById('statBusy').innerText = myCustomers.filter(c => c.status === 'busy' || c.status === 'callback').length;
+        
+        const conv = total > 0 ? ((admissions / total) * 100).toFixed(1) : 0;
+        document.getElementById('statConversion').innerText = `${conv}%`;
     };
 
-    const renderCustomersList = () => {
+    window.renderCustomersList = () => {
         const grid = document.getElementById("customersGrid");
         if(!currentAgent) return;
         
         const myName = currentAgent.displayName;
-        const myCustomers = extendedCRM.customers.filter(c => c.assignedAgent === myName);
+        let activeCustomers = extendedCRM.customers.filter(c => c.assignedAgent === myName && !c.isDeleted);
 
-        if(myCustomers.length === 0) {
+        // Filters Priority 7 & Deep Search Priority 10
+        const q = document.getElementById('globalSearch').value.toLowerCase();
+        const timeF = document.getElementById('filterTime').value;
+        const statusF = document.getElementById('filterStatus').value;
+        const prioF = document.getElementById('filterPriority').value;
+
+        // Apply Time Filter
+        if(timeF === 'today') activeCustomers = activeCustomers.filter(c => isToday(c.created));
+        else if(timeF === 'week') {
+            const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+            activeCustomers = activeCustomers.filter(c => new Date(c.created) >= weekAgo);
+        }
+
+        // Apply Status Filter
+        if(statusF === 'interested') activeCustomers = activeCustomers.filter(c => c.status.includes('interested'));
+        else if(statusF !== 'all') activeCustomers = activeCustomers.filter(c => c.status === statusF);
+
+        // Apply Priority Filter
+        if(prioF !== 'all') activeCustomers = activeCustomers.filter(c => c.priority === prioF);
+
+        // Deep Apply Search
+        if(q) {
+            activeCustomers = activeCustomers.filter(c => 
+                c.name.toLowerCase().includes(q) || 
+                c.phone.includes(q) || 
+                c.city.toLowerCase().includes(q) || 
+                c.course.toLowerCase().includes(q) || 
+                (c.leadId && c.leadId.toLowerCase().includes(q)) ||
+                (c.source && c.source.toLowerCase().includes(q)) ||
+                (c.internalNote && c.internalNote.toLowerCase().includes(q)) ||
+                (c.edu && c.edu.toLowerCase().includes(q)) ||
+                c.tags.join(' ').toLowerCase().includes(q)
+            );
+        }
+
+        if(activeCustomers.length === 0) {
             grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-400">
-                <i class="ph-fill ph-users text-5xl mb-3 opacity-50"></i>
-                <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">No Customers Yet</h3>
-                <p class="text-sm">Create a new lead to see it appear here in your database.</p>
+                <i class="ph-fill ph-magnifying-glass text-5xl mb-3 opacity-50"></i>
+                <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">No Leads Found</h3>
+                <p class="text-sm">Try adjusting your search or filters.</p>
             </div>`;
             return;
         }
 
-        grid.innerHTML = myCustomers.map(c => {
+        grid.innerHTML = activeCustomers.map(c => {
             let statusColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
             if(c.status.includes('interested')) statusColor = "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800";
             else if(c.status === 'busy') statusColor = "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800";
             else if(c.status === 'callback') statusColor = "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800";
             else if(c.status === 'admission') statusColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800";
+            else if(c.status === 'lost') statusColor = "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
+            else if(c.status === 'wrong_number' || c.status === 'no_answer') statusColor = "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800";
+
+            let prioColor = "text-slate-400";
+            if(c.priority === 'High') prioColor = "text-red-500";
+            if(c.priority === 'Medium') prioColor = "text-orange-400";
+
+            const isLate = isOverdue(c.followup) && c.status !== 'admission' && c.status !== 'lost';
+            const cardClass = isLate ? "overdue-badge border-red-300 dark:border-red-800/50" : "border-slate-200 dark:border-slate-700";
+            const ageLabel = getLeadAge(c.created);
 
             return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow relative group">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex gap-3 items-center">
-                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random" class="w-12 h-12 rounded-full shadow-sm">
-                        <div>
-                            <h3 class="font-bold text-slate-800 dark:text-white text-lg leading-tight truncate w-32 md:w-40">${c.name}</h3>
-                            <span class="text-xs font-semibold text-slate-500">${c.phone}</span>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border p-4 md:p-5 hover:shadow-md transition-shadow relative group flex flex-col ${cardClass}">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex gap-2 md:gap-3 items-center">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random" class="w-8 h-8 md:w-10 md:h-10 rounded-full shadow-sm">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-bold text-slate-800 dark:text-white text-sm md:text-base leading-tight truncate max-w-[120px] md:max-w-[160px]">${c.name}</h3>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="text-[9px] md:text-[10px] font-bold text-slate-400 border border-slate-200 dark:border-slate-700 px-1 rounded truncate max-w-[60px] md:max-w-[80px]">${c.leadId}</span>
+                                <i class="ph-fill ph-flag ${prioColor} text-[10px] md:text-xs" title="${c.priority} Priority"></i>
+                            </div>
                         </div>
                     </div>
-                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusColor}">${c.status.replace('interested_', 'Int. ')}</span>
+                    <span class="px-2 py-0.5 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${statusColor} shrink-0 max-w-[80px] md:max-w-none truncate">${c.status.replace('interested_', 'Int. ')}</span>
                 </div>
                 
-                <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-5">
-                    <div class="flex items-center gap-2"><i class="ph ph-briefcase"></i> <span class="truncate">${c.course}</span></div>
-                    <div class="flex justify-between">
-                        <span class="flex items-center gap-2"><i class="ph ph-map-pin"></i> ${c.city}</span>
-                        <span class="flex items-center gap-2"><i class="ph ph-user"></i> ${c.assignedAgent || 'Agent'}</span>
+                <div class="space-y-1.5 text-[11px] md:text-xs text-slate-600 dark:text-slate-400 mb-4 flex-1">
+                    <div class="flex items-center gap-2"><i class="ph ph-phone shrink-0"></i> <span class="truncate">${c.phone}</span></div>
+                    <div class="flex items-center gap-2"><i class="ph ph-briefcase shrink-0"></i> <span class="truncate">${c.course}</span></div>
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center gap-2 min-w-0 pr-2"><i class="ph ph-map-pin shrink-0"></i> <span class="truncate">${c.city}</span></span>
+                        ${c.followup ? `<span class="flex items-center gap-1 shrink-0 ${isLate?'text-red-500 font-bold':''}"><i class="ph ph-calendar"></i> ${new Date(c.followup).toLocaleDateString([], {month:'short', day:'numeric'})}</span>` : `<span class="text-slate-400 font-semibold shrink-0">${ageLabel}</span>`}
                     </div>
                 </div>
                 
-                <button onclick="window.openCustomerProfile('${c.id}')" class="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-2">
-                    <i class="ph ph-user-circle"></i> Open Profile
-                </button>
+                <div class="flex gap-2 shrink-0">
+                    <button onclick="window.openCustomerProfile('${c.id}')" class="flex-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold py-2 rounded-lg border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5 text-xs shadow-sm min-h-[40px]">
+                        <i class="ph-bold ph-user-circle text-sm md:text-base"></i> Profile
+                    </button>
+                    <button onclick="window.open('https://wa.me/91${c.phone}', '_blank')" class="bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/30 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800 px-3 py-2 rounded-lg transition text-base md:text-lg shadow-sm min-h-[40px] flex items-center justify-center">
+                        <i class="ph-fill ph-whatsapp-logo"></i>
+                    </button>
+                </div>
             </div>
             `;
         }).join('');
+    };
+
+    window.softDeleteProfile = async () => {
+        if(!currentProfileData) return;
+        if(confirm(`Are you sure you want to delete lead ${currentProfileData.leadId}? It can be restored later by Admin.`)) {
+            currentProfileData.isDeleted = true;
+            logActivity(currentProfileData.id, 'delete', 'Lead Soft Deleted', 'Removed from active views', currentAgent.displayName);
+            localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+            
+            await saveLead({
+                action: 'DELETE_PROFILE',
+                leadId: currentProfileData.leadId,
+                timestamp: new Date().toISOString()
+            }, 'leads');
+            
+            customToast("Lead deleted safely to recycle bin.");
+            switchTab('customers', 'Customer Database', document.querySelector('.sidebar-link:nth-child(4)'));
+            renderCustomersList();
+            updateDashboardStats();
+        }
     };
 
     window.openCustomerProfile = (id) => {
         const customer = extendedCRM.customers.find(c => c.id === id);
         if(!customer) return;
         currentProfileId = id;
+        currentProfileData = customer;
 
         document.getElementById("profName").innerText = customer.name;
+        document.getElementById("profLeadId").innerText = customer.leadId || "UVA-Legacy";
         document.getElementById("profPhone").innerText = customer.phone;
         document.getElementById("profCity").innerText = customer.city;
         document.getElementById("profCourse").innerText = customer.course;
         document.getElementById("profSource").innerText = customer.source;
         document.getElementById("profEdu").innerText = customer.edu;
+        
+        let pColor = "text-slate-400";
+        if(customer.priority === 'High') pColor = "text-red-500";
+        if(customer.priority === 'Medium') pColor = "text-orange-500";
+        document.getElementById("profPriority").innerHTML = `<i class="ph-fill ph-flag ${pColor}"></i> ${customer.priority || 'Medium'}`;
+        
         document.getElementById("profCreated").innerText = new Date(customer.created).toLocaleString();
-        document.getElementById("profAgent").innerText = customer.assignedAgent || "Unknown";
+        
+        // Priority 5 Health & Contact
+        document.getElementById("profAge").innerHTML = `<i class="ph-fill ph-hourglass"></i> Lead Age: ${getLeadAge(customer.created)}`;
+        document.getElementById("profLastContact").innerHTML = `<i class="ph-fill ph-clock-counter-clockwise"></i> Contacted: ${getTimeSince(customer.lastContact)}`;
+        
+        const health = getLeadHealth(customer);
+        const hBadge = document.getElementById("profHealthBadge");
+        hBadge.className = `px-2 py-0.5 rounded font-bold text-[9px] md:text-[10px] uppercase tracking-wide inline-block ${health.color}`;
+        hBadge.innerText = health.label;
+
+        document.getElementById("profNextFollowup").innerHTML = customer.followup ? 
+            `<span class="${isOverdue(customer.followup) ? 'text-red-500 font-bold' : ''}">${new Date(customer.followup).toLocaleString()}</span>` : 
+            'Not Scheduled';
+
         document.getElementById("profAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=random&size=128`;
         
         if(customer.tags && customer.tags.length > 0) {
-            document.getElementById("profTagsList").innerHTML = customer.tags.map(t => `<span class="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">${t}</span>`).join('');
+            document.getElementById("profTagsList").innerHTML = customer.tags.map(t => `<span class="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-sm">${t}</span>`).join('');
         } else {
             document.getElementById("profTagsList").innerHTML = '';
         }
 
         renderProfileTimeline(id);
-        renderProfileTasks(id);
         renderJourney(customer.status);
 
         switchTab('profile', 'Customer Profile');
@@ -1424,87 +1811,178 @@
 
         document.getElementById("profTimelineList").innerHTML = `
             <div class="timeline-line"></div>
-            ${tEvents.slice().reverse().map(ev => {
+            ${tEvents.slice().sort((a,b)=>a.timestamp-b.timestamp).reverse().map(ev => {
                 let iconClass = 'ph-info';
                 let iconBg = 'bg-blue-500 text-white';
                 if(ev.type === 'note') { iconClass = 'ph-chat-text'; iconBg = 'bg-purple-500 text-white'; }
                 if(ev.type === 'whatsapp') { iconClass = 'ph-whatsapp-logo'; iconBg = 'bg-green-500 text-white'; }
+                if(ev.type === 'create') { iconClass = 'ph-sparkle'; iconBg = 'bg-yellow-500 text-white'; }
+                if(ev.type === 'delete') { iconClass = 'ph-trash'; iconBg = 'bg-red-500 text-white'; }
                 
                 return `
-                <div class="relative pl-8 pb-4">
-                    <div class="absolute left-[-2px] top-1 w-6 h-6 rounded-full ${iconBg} flex items-center justify-center border-4 border-white dark:border-slate-800 z-10 shadow-sm"><i class="ph-fill ${iconClass} text-[10px]"></i></div>
-                    <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                        <div class="flex justify-between items-start mb-1">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${ev.title}</span>
-                            <span class="text-[10px] text-slate-400">${ev.date} ${ev.time}</span>
+                <div class="relative pl-8 pb-5 group">
+                    <div class="absolute left-[-2px] top-1 w-6 h-6 rounded-full ${iconBg} flex items-center justify-center border-4 border-white dark:border-slate-800 z-10 shadow-sm transition-transform group-hover:scale-110"><i class="ph-fill ${iconClass} text-[10px]"></i></div>
+                    <div class="bg-white dark:bg-slate-800 p-3.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 group-hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-1.5">
+                            <span class="font-bold text-xs md:text-sm text-slate-800 dark:text-slate-200 break-words pr-2">${ev.title}</span>
+                            <span class="text-[9px] md:text-[10px] font-semibold text-slate-400 bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded shrink-0">${ev.date} ${ev.time}</span>
                         </div>
-                        <p class="text-xs text-slate-600 dark:text-slate-400">${ev.desc}</p>
-                        <div class="text-[9px] font-semibold text-slate-400 mt-2 flex items-center gap-1"><i class="ph-fill ph-user-circle"></i> By ${ev.agent}</div>
+                        <p class="text-[11px] md:text-xs text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">${ev.desc}</p>
+                        ${ev.oldVal && ev.newVal ? `<div class="mt-1 text-[9px] md:text-[10px] text-slate-500"><span class="line-through opacity-70">${ev.oldVal}</span> ➔ <b>${ev.newVal}</b></div>` : ''}
+                        <div class="text-[8px] md:text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1 uppercase tracking-wider"><i class="ph-fill ph-user-circle"></i> By ${ev.agent}</div>
                     </div>
                 </div>`;
             }).join('')}
         `;
     };
 
-    window.addNoteToProfile = () => {
+    window.addNoteToProfile = async () => {
         const input = document.getElementById("newNoteInput");
+        const statusSelect = document.getElementById("updateStatusSelect");
         const text = input.value.trim();
-        if(!text || !currentProfileId) return;
+        const newStatus = statusSelect ? statusSelect.value : "";
+        
+        if(!text && !newStatus) return;
+        if(!currentProfileId || !currentProfileData) return;
 
         const agentNameStr = currentAgent ? currentAgent.displayName : "Unknown Agent";
-        const now = new Date();
-        
-        extendedCRM.timeline[currentProfileId].push({
-            id: Date.now(), 
-            type: 'note', 
-            title: `Note added by ${agentNameStr}`, 
-            desc: text, 
-            date: now.toLocaleDateString(), 
-            time: now.toLocaleTimeString(), 
-            agent: agentNameStr
-        });
-        
-        localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
-        input.value = "";
-        renderProfileTimeline(currentProfileId);
-        customToast("Note saved to timeline!");
-    };
+        let desc = "";
+        let oldS = currentProfileData.status;
 
-    const renderProfileTasks = (id) => {
-        const tasks = extendedCRM.tasks[id] || [];
-        const container = document.getElementById("profTasksList");
-        
-        if(tasks.length === 0) { container.innerHTML = '<div class="text-xs text-slate-400">No pending tasks.</div>'; return; }
-        
-        container.innerHTML = tasks.map(t => `
-            <div class="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 rounded-lg transition">
-                <input type="checkbox" id="task_${t.id}" class="task-checkbox w-4 h-4 text-brand-500 rounded border-slate-300 cursor-pointer" ${t.done ? 'checked' : ''} onchange="window.toggleTask('${id}', ${t.id}, this.checked)">
-                <label for="task_${t.id}" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer flex-1 transition-colors">${t.text}</label>
-            </div>
-        `).join('');
-    };
-
-    window.toggleTask = (cid, taskId, isDone) => {
-        const task = extendedCRM.tasks[cid].find(t => t.id === taskId);
-        if(task) {
-            task.done = isDone;
-            localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        if(newStatus) {
+            currentProfileData.status = newStatus;
+            desc += `Status changed to [${newStatus}]. \n`;
+            renderJourney(newStatus);
             
-            if(isDone) {
-                const agentNameStr = currentAgent ? currentAgent.displayName : "Unknown Agent";
-                const now = new Date();
-                extendedCRM.timeline[cid].push({
-                    id: Date.now(), 
-                    type: 'task', 
-                    title: `Task completed by ${agentNameStr}`, 
-                    desc: `Checked off: ${task.text}`, 
-                    date: now.toLocaleDateString(), 
-                    time: now.toLocaleTimeString(), 
-                    agent: agentNameStr
-                });
-                renderProfileTimeline(cid);
+            if(newStatus === 'admission') {
+                saveLead({
+                    leadId: currentProfileData.leadId,
+                    customerName: currentProfileData.name,
+                    course: currentProfileData.course,
+                    amount: 0,
+                    timestamp: new Date().toISOString()
+                }, 'admissions');
             }
         }
+        if(text) desc += `Note: ${text}`;
+        
+        currentProfileData.updated = new Date().toISOString();
+        currentProfileData.lastContact = new Date().toISOString();
+        
+        logActivity(currentProfileId, 'note', `Manual Update`, desc, agentNameStr, newStatus ? oldS : '', newStatus || '');
+        localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        
+        if(input) input.value = "";
+        if(statusSelect) statusSelect.value = "";
+        
+        openCustomerProfile(currentProfileId); // Refresh all details
+        renderCustomersList();
+        updateDashboardStats();
+        renderAnalyticsTable();
+        customToast("Profile updated successfully!");
+
+        // Priority 12 Sync Leads Table
+        await saveLead({
+            action: 'UPDATE_PROFILE',
+            leadId: currentProfileData.leadId,
+            status: currentProfileData.status,
+            internalNote: desc,
+            timestamp: currentProfileData.updated
+        }, 'leads');
+    };
+
+    window.sendProfileMsg = async (type) => {
+        if(!currentProfileData) return;
+        
+        const caller = currentAgent ? currentAgent.displayName : "Agent";
+        let text = "";
+        
+        if(type === 'interested') {
+            let scriptKey = 'interested_all';
+            const courseStr = currentProfileData.course ? currentProfileData.course.toLowerCase() : '';
+            
+            if(courseStr.includes('ai')) scriptKey = 'interested_ai';
+            else if(courseStr.includes('tally') || courseStr.includes('account')) scriptKey = 'interested_tally';
+            else if(courseStr.includes('design') || courseStr.includes('dtp')) scriptKey = 'interested_design';
+            else if(courseStr.includes('ccc') || courseStr.includes('basic')) scriptKey = 'interested_ccc';
+            else if(courseStr.includes('english')) scriptKey = 'interested_english';
+            else if(courseStr.includes('web')) scriptKey = 'interested_web';
+            
+            text = scripts[scriptKey].replace("{caller_name}", caller)
+                                     .replace("નમસ્તે,", `નમસ્તે ${currentProfileData.name},`)
+                                     .replace("{custom_note}", "")
+                                     .replace("{brochure_text}", "");
+        } else if (type === 'followup') {
+            text = scripts['profile_followup'].replace("{caller_name}", caller)
+                                              .replace("{customer_name}", currentProfileData.name);
+        }
+        
+        currentProfileData.lastContact = new Date().toISOString();
+        logActivity(currentProfileData.id, 'whatsapp', `WhatsApp (${type}) Sent`, `Message template sent to customer.`, caller);
+        localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        
+        openCustomerProfile(currentProfileData.id); // update last contact UI
+        
+        // Priority 12 Sync WhatsApp table
+        saveLead({
+            leadId: currentProfileData.leadId,
+            messageType: type,
+            agentName: caller,
+            timestamp: new Date().toISOString()
+        }, 'whatsapp');
+        
+        if(text) {
+            window.open(`https://wa.me/91${currentProfileData.phone}?text=${encodeURIComponent(text.replace(/\n\n\n/g, "\n\n"))}`, '_blank');
+        } else {
+            window.open(`https://wa.me/91${currentProfileData.phone}`, '_blank');
+        }
+        
+        customToast(`Message Opened in WhatsApp!`);
+    };
+
+    window.downloadReportsCSV = () => {
+        let csv = "Lead_ID,Name,Phone,Course,Priority,Current_Status,Lead_Health,Lead_Age,Source,City,Agent,Tags,Date_Created,Last_Contact,Next_FollowUp\n";
+        extendedCRM.customers.filter(c=>!c.isDeleted).forEach(c => {
+            const tags = c.tags ? c.tags.join('; ') : '';
+            const health = getLeadHealth(c).label;
+            const age = getLeadAge(c.created);
+            csv += `"${c.leadId}","${c.name}","${c.phone}","${c.course}","${c.priority}","${c.status}","${health}","${age}","${c.source}","${c.city}","${c.assignedAgent}","${tags}","${new Date(c.created).toLocaleDateString()}","${c.lastContact ? new Date(c.lastContact).toLocaleDateString() : ''}","${c.followup||''}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `UVACRM_Full_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        logActivity('EXPORT', 'note', 'Report Generated', 'Full CSV report downloaded by agent', currentAgent.displayName);
+    };
+
+    const renderAnalyticsTable = () => {
+        if(!currentAgent) return;
+        const body = document.getElementById("analyticsTableBody");
+        if(!body) return;
+        
+        const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
+        const myCustomers = activeCustomers.filter(c => c.assignedAgent === currentAgent.displayName);
+        
+        const stats = {
+            "Total Active Leads Generated": myCustomers.length,
+            "Total Admissions Completed": myCustomers.filter(c => c.status === 'admission').length,
+            "Hot Leads (By Tag)": myCustomers.filter(c => c.tags.includes('Hot Lead')).length,
+            "High Priority Leads": myCustomers.filter(c => c.priority === 'High').length,
+            "Interested Conversions": myCustomers.filter(c => c.status.includes('interested')).length,
+            "Pending Follow Ups": myCustomers.filter(c => c.followup).length,
+            "Cold / Lost / Wrong Numbers": myCustomers.filter(c => c.status === 'lost' || c.status.includes('wrong') || c.status.includes('no_answer')).length
+        };
+        
+        body.innerHTML = Object.entries(stats).map(([key, val]) => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                <td class="px-4 md:px-6 py-4 font-medium text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800">${key}</td>
+                <td class="px-4 md:px-6 py-4 font-bold text-brand-600 dark:text-brand-400 border-b border-slate-100 dark:border-slate-800">${val}</td>
+            </tr>
+        `).join('');
     };
 
 </script>
