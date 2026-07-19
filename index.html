@@ -927,7 +927,7 @@
     let pendingLeadData = null; // Used for duplicate resolution
     window.duplicateShownFor = {}; // Cache to prevent infinite modals while typing
 
-    const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwhc3Mz5tS4fDGfG1IE1rmPCqypIWbzQUTV2J-TthLMxfRfSR6NiksGPy9k5ZQ-PgIrPA/exec" };
+    const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycby4yLcOqmgRaMcNUPU-Pj-eKtxG7H2njcgrUHrbfE04xJHTrW6At1zha144RZ055GQ-Ew/exec" };
 
     const scripts = {
         "interested_ai": "🌟 *Udaan Vibrant Academy* 🌟\n\nનમસ્તે,\nઆપણી વાતચીત મુજબ, જોબ અને કરિયર ગ્રોથ માટે અમારો પ્રેક્ટિકલ *AI Mastery Program* બેસ્ટ છે.\n\n{brochure_text}\n{custom_note}\n\nઆભાર,\n- {caller_name}\n\n📍 *સરનામું:* બાબીવાડા પરા રોડ, તળાવ પાસે, પીલાજી ગંજ, મહેસાણા\n📞 *સંપર્ક:* 9408097177",
@@ -1212,7 +1212,12 @@
         const formData = new URLSearchParams();
         formData.append('table', table); // Route to different tabs in GS
         
-        for (const key in data) formData.append(key, data[key]);
+        // Ensure ALL fields are appended correctly
+        for (const key in data) {
+             if (data[key] !== undefined && data[key] !== null) {
+                  formData.append(key, data[key]);
+             }
+        }
         
         if(currentAgent) {
             formData.append('agentName', currentAgent.displayName);
@@ -1223,7 +1228,10 @@
         try {
             await fetch(CONFIG.SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: formData });
             return true;
-        } catch { return false; }
+        } catch (e) { 
+            console.error("Sheet Sync Error:", e);
+            return false; 
+        }
     };
 
     window.generateMessage = () => {
