@@ -147,6 +147,59 @@
     </div>
 </div>
 
+<!-- Cloud Sync & Firebase Troubleshooting Modal -->
+<div id="cloudDiagnosticModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[1300] hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 p-6 sm:p-7 rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center">
+                    <i class="ph-fill ph-cloud-check text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white">ક્લાઉડ સિંક સ્ટેટસ (Multi-Device Sync)</h3>
+                    <p class="text-xs text-slate-500" id="cloudDiagStatusText">ચેક કરી રહ્યું છે...</p>
+                </div>
+            </div>
+            <button onclick="closeCloudDiagnosticModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-full"><i class="ph ph-x text-xl"></i></button>
+        </div>
+
+        <div class="space-y-4 text-xs sm:text-sm">
+            <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-3">
+                <div>
+                    <div class="font-extrabold text-emerald-900 dark:text-emerald-300">આ ડિવાઇસના જૂના ડેટા ક્લાઉડમાં અપલોડ કરો</div>
+                    <div class="text-xs text-emerald-700 dark:text-emerald-400">જો તમે પહેલા એક્સેલ ઈમ્પોર્ટ કરી હોય અને બીજા મોબાઈલ/PC માં ન દેખાતી હોય તો અહીં ક્લિક કરો:</div>
+                </div>
+                <button onclick="forcePushAllLocalToCloud()" id="forceCloudPushBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2.5 rounded-xl shrink-0 shadow-sm flex items-center gap-1.5">
+                    <i class="ph-bold ph-cloud-arrow-up text-base"></i> અપલોડ કરો
+                </button>
+            </div>
+
+            <div id="firebaseRuleHelpBox" class="p-4 rounded-2xl bg-amber-50 dark:bg-slate-900 border border-amber-300 dark:border-slate-700 space-y-2">
+                <div class="font-extrabold text-amber-900 dark:text-amber-400 flex items-center gap-1.5">
+                    <i class="ph-fill ph-warning-circle text-lg"></i> જો Firebase માં "Permission Denied" એરર આવે તો શું કરવું?
+                </div>
+                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    ૧. <b>Firebase Console</b> (console.firebase.google.com) ખોલો ➔ તમારા પ્રોજેક્ટ <b>uvacalling</b> માં જાઓ.<br>
+                    ૨. ડાબી બાજુ <b>Firestore Database</b> ➔ ઉપર <b>Rules</b> ટેબ પર ક્લિક કરો.<br>
+                    ૩. નીચે મુજબના Rules પેસ્ટ કરીને <b>Publish</b> દબાવો જેથી બધા ડિવાઇસમાં ડેટા સેવ થાય:
+                </p>
+                <pre class="bg-slate-900 text-emerald-400 p-3 rounded-xl text-[11px] overflow-x-auto font-mono">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</pre>
+            </div>
+        </div>
+
+        <div class="mt-5 flex justify-end">
+            <button onclick="closeCloudDiagnosticModal()" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs">બંધ કરો</button>
+        </div>
+    </div>
+</div>
+
 <!-- Sheet Export Password Modal (UVA5555) -->
 <div id="sheetPasswordModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[1250] hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
@@ -686,9 +739,9 @@
                     <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white leading-tight truncate" id="currentTabTitle">ડેશબોર્ડ</h2>
                     <div class="flex items-center gap-2">
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium" id="currentDate">Today</p>
-                        <span id="sheetSyncIndicator" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ગૂગલ શીટ સિંક
-                        </span>
+                        <button type="button" onclick="openCloudDiagnosticModal()" id="cloudSyncBadge" class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 cursor-pointer">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> ક્લાઉડ લાઈવ સિંક
+                        </button>
                     </div>
                 </div>
             </div>
@@ -699,6 +752,10 @@
             </div>
 
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                <button onclick="openCloudDiagnosticModal()" class="p-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800 rounded-full transition-all flex items-center justify-center" title="ક્લાઉડ સિંક સ્ટેટસ">
+                    <i class="ph-fill ph-cloud-arrow-up text-base"></i>
+                </button>
+
                 <button onclick="openExcelImportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-2.5 sm:px-3.5 py-2 rounded-full shadow-sm flex items-center gap-1.5 transition" title="એક્સેલ ઈમ્પોર્ટ">
                     <i class="ph-bold ph-file-xls text-base"></i> <span class="hidden lg:inline">એક્સેલ ઈમ્પોર્ટ</span>
                 </button>
@@ -800,7 +857,7 @@
                 
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
-                        <h4 class="text-slate-500 font-bold text-[11px]">સમય વીતી ગયેલ</h4>
+                        <h4 class="text-slate-500 font-bold text-[11px]">સમય વીતી ગયેલ (Overdue)</h4>
                         <div class="text-xl font-extrabold text-red-500" id="statOverdue">0</div>
                     </div>
                     <div class="w-9 h-9 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center"><i class="ph-fill ph-warning-circle text-lg"></i></div>
@@ -809,17 +866,17 @@
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
                         <h4 class="text-slate-500 font-bold text-[11px]">આજના ફોલો-અપ</h4>
-                        <div class="text-xl font-extrabold text-slate-800 dark:text-white" id="statTodayFollowups">0</div>
+                        <div class="text-xl font-extrabold text-amber-500" id="statTodayFollowups">0</div>
                     </div>
-                    <div class="w-9 h-9 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-full flex items-center justify-center"><i class="ph-fill ph-clock-counter-clockwise text-lg"></i></div>
+                    <div class="w-9 h-9 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-full flex items-center justify-center"><i class="ph-fill ph-calendar-check text-lg"></i></div>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
                         <h4 class="text-slate-500 font-bold text-[11px]">ફાઇનલ ક્લોઝ્ડ</h4>
-                        <div class="text-xl font-extrabold text-brand-600" id="statFinalClosed">0</div>
+                        <div class="text-xl font-extrabold text-purple-600" id="statFinalClosed">0</div>
                     </div>
-                    <div class="w-9 h-9 bg-brand-50 dark:bg-brand-900/20 text-brand-600 rounded-full flex items-center justify-center"><i class="ph-fill ph-seal-check text-lg"></i></div>
+                    <div class="w-9 h-9 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-full flex items-center justify-center"><i class="ph-fill ph-seal-check text-lg"></i></div>
                 </div>
             </div>
         </div>
@@ -955,92 +1012,104 @@
 
         <!-- CUSTOMERS TAB (Direct Calling + Pending/Completed Sub-Tabs) -->
         <div id="tab-customers" class="tab-content hidden flex-1 overflow-hidden flex flex-col w-full bg-crm-50 dark:bg-crm-900">
-            <div class="p-3.5 sm:p-5 pb-2 flex flex-col gap-3 shrink-0">
+            <div class="px-3 py-2.5 sm:px-5 sm:py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-col gap-2.5 shrink-0 shadow-sm">
                 <div class="flex flex-wrap gap-2 justify-between items-center">
-                    <div>
-                        <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-white">કસ્ટમર કોલિંગ લિસ્ટ</h2>
-                        <p class="text-[11px] text-slate-500">ડાયરેક્ટ કોલ કરો; કોલ પૂરો થતાં જ રિપોર્ટ બોક્સ આપોઆપ ખુલશે</p>
+                    <div class="flex items-center gap-2.5">
+                        <h2 class="text-base sm:text-xl font-extrabold text-slate-800 dark:text-white">📞 કસ્ટમર કોલિંગ લિસ્ટ</h2>
+                        <span class="hidden md:inline-block text-xs font-semibold text-slate-400">• ડાયરેક્ટ કોલ કરો & ઓટો રિપોર્ટ ભરો</span>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openExcelImportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-xs shadow-sm flex items-center gap-1.5">
+                        <button onclick="openExcelImportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-1.5">
                             <i class="ph-bold ph-microsoft-excel-logo text-base"></i> એક્સેલ અપલોડ
                         </button>
-                        <button onclick="switchTab('newlead', 'નવી લીડ ઉમેરો', document.getElementById('nav-newlead'))" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-3 rounded-xl text-xs shadow-sm flex items-center gap-1">
-                            <i class="ph-bold ph-plus"></i> નવી લીડ
+                        <button onclick="switchTab('newlead', 'નવી લીડ ઉમેરો', document.getElementById('nav-newlead'))" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-1">
+                            <i class="ph-bold ph-plus text-base"></i> નવી લીડ
                         </button>
                     </div>
                 </div>
 
-                <!-- Call Status Tabs -->
-                <div class="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-                    <div class="flex flex-wrap gap-1 w-full sm:w-auto">
-                        <button onclick="setCustomerCallTab('all')" id="callTab-all" class="call-tab-btn flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-500 text-white transition">
+                <!-- Unified Compact Filter Bar (Tabs + Dropdown Lists) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-center">
+                    <div class="lg:col-span-5 flex gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+                        <button onclick="setCustomerCallTab('all')" id="callTab-all" class="call-tab-btn flex-1 py-2 px-2.5 rounded-lg text-xs sm:text-sm font-extrabold bg-brand-500 text-white transition text-center">
                             તમામ (<span id="countCallAll">0</span>)
                         </button>
-                        <button onclick="setCustomerCallTab('pending')" id="callTab-pending" class="call-tab-btn flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 transition flex items-center justify-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> બાકી કોલ્સ (<span id="countCallPending">0</span>)
+                        <button onclick="setCustomerCallTab('pending')" id="callTab-pending" class="call-tab-btn flex-1 py-2 px-2.5 rounded-lg text-xs sm:text-sm font-extrabold text-slate-600 dark:text-slate-300 transition flex items-center justify-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> બાકી (<span id="countCallPending">0</span>)
                         </button>
-                        <button onclick="setCustomerCallTab('completed')" id="callTab-completed" class="call-tab-btn flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 transition flex items-center justify-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> પૂર્ણ કોલ્સ (<span id="countCallCompleted">0</span>)
+                        <button onclick="setCustomerCallTab('completed')" id="callTab-completed" class="call-tab-btn flex-1 py-2 px-2.5 rounded-lg text-xs sm:text-sm font-extrabold text-slate-600 dark:text-slate-300 transition flex items-center justify-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> પૂર્ણ (<span id="countCallCompleted">0</span>)
                         </button>
                     </div>
 
-                    <div class="flex gap-1.5 w-full sm:w-auto">
-                        <select id="filterPendingSubtag" onchange="renderCustomersList()" class="flex-1 sm:flex-none bg-amber-50 dark:bg-slate-900 border border-amber-200 dark:border-slate-700 text-[11px] font-bold text-amber-800 dark:text-amber-300 rounded-xl px-2.5 py-1.5 outline-none">
-                            <option value="all">તમામ પેન્ડિંગ સબ-ટેગ</option>
+                    <div class="lg:col-span-7 grid grid-cols-3 gap-2">
+                        <select id="filterPendingSubtag" onchange="renderCustomersList()" class="w-full bg-amber-50 dark:bg-slate-900 border border-amber-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-300 rounded-xl px-2.5 py-2 outline-none min-h-[40px]">
+                            <option value="all">⏳ પેન્ડિંગ સબ-ટેગ (All)</option>
                             <option value="Fresh / Not Dialed">🆕 ફ્રેશ / કોલ બાકી</option>
-                            <option value="Ringing / No Answer">📵 રિંગ વાગે છે / No Answer</option>
-                            <option value="Busy Right Now">⏳ વ્યસ્ત છે (Busy)</option>
+                            <option value="Ringing / No Answer">📵 રિંગ / No Answer</option>
+                            <option value="Busy Right Now">⏳ વ્યસ્ત (Busy)</option>
                             <option value="Switched Off / Not Reachable">📴 સ્વીચ ઓફ</option>
-                            <option value="Asked to Call Later">🔄 પછી ફોન કરવાનું કહ્યું</option>
+                            <option value="Asked to Call Later">🔄 પછી ફોન કરવા કહ્યું</option>
                         </select>
-                        <select id="filterStatus" onchange="renderCustomersList()" class="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold rounded-xl px-2.5 py-1.5 outline-none">
-                            <option value="all">તમામ સ્ટેટસ</option>
-                            <option value="interested">રસ ધરાવતા (Interested)</option>
-                            <option value="callback">ફોલો-અપ / Callback</option>
-                            <option value="admission">એડમિશન કન્ફર્મ</option>
-                            <option value="lost">રસ નથી (Lost)</option>
+                        <select id="filterCustomerCourse" onchange="renderCustomersList()" class="w-full bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-300 rounded-xl px-2.5 py-2 outline-none min-h-[40px]">
+                            <option value="all">🎓 કોર્સ ફિલ્ટર (તમામ)</option>
+                            <option value="ai">🤖 AI Mastery કોર્સ</option>
+                            <option value="ccc">💻 CCC / Basic કોર્સ</option>
+                            <option value="tally">📊 Tally Account</option>
+                            <option value="design">🎨 DTP & Design</option>
+                            <option value="english">🗣️ Spoken English</option>
+                            <option value="web">🌐 Web Development</option>
+                            <option value="all_courses">📚 તમામ કોર્સ માહિતી</option>
+                        </select>
+                        <select id="filterStatus" onchange="renderCustomersList()" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 rounded-xl px-2.5 py-2 outline-none min-h-[40px]">
+                            <option value="all">📌 સ્ટેટસ (તમામ)</option>
+                            <option value="interested">✅ રસ ધરાવતા (Interested)</option>
+                            <option value="callback">🔄 ફોલો-અપ / Callback</option>
+                            <option value="admission">🎉 એડમિશન કન્ફર્મ</option>
+                            <option value="lost">❌ રસ નથી (Lost)</option>
                         </select>
                     </div>
                 </div>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-3.5 sm:px-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3.5" id="customersGrid"></div>
+            <div class="flex-1 overflow-y-auto p-2.5 sm:p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3" id="customersGrid"></div>
             </div>
         </div>
 
         <!-- 1. FIRST FOLLOW-UP TAB -->
         <div id="tab-followups" class="tab-content hidden flex-1 overflow-hidden flex flex-col w-full bg-crm-50 dark:bg-crm-900">
-            <div class="p-3.5 sm:p-5 pb-2 flex flex-col gap-3 shrink-0">
-                <div>
-                    <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                        <i class="ph-fill ph-calendar-check text-purple-600"></i> ૧. પહેલું ફોલો-અપ & રિમાઇન્ડર
-                    </h2>
-                    <p class="text-xs text-slate-500">કોલરે સિલેક્ટ કરેલ રૂબરૂ મિટિંગ, કોલ રિમાઇન્ડર અને ડેમો ક્લાસ</p>
+            <div class="px-3 py-2.5 sm:px-5 sm:py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <i class="ph-fill ph-calendar-check text-purple-600 text-xl"></i>
+                    <h2 class="text-base sm:text-xl font-extrabold text-slate-800 dark:text-white">૧. પહેલું ફોલો-અપ & રિમાઇન્ડર</h2>
                 </div>
 
-                <div class="flex flex-wrap gap-1.5 bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar">
-                    <button onclick="setFollowupFilter('all')" id="fuTab-all" class="fu-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-600 text-white whitespace-nowrap">
-                        તમામ (<span id="countFuAll">0</span>)
-                    </button>
-                    <button onclick="setFollowupFilter('Physical Meet')" id="fuTab-Physical Meet" class="fu-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        🤝 રૂબરૂ મિટિંગ (<span id="countFuMeet">0</span>)
-                    </button>
-                    <button onclick="setFollowupFilter('Call Reminder')" id="fuTab-Call Reminder" class="fu-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        ⏰ કોલ રિમાઇન્ડર (<span id="countFuReminder">0</span>)
-                    </button>
-                    <button onclick="setFollowupFilter('Demo Class')" id="fuTab-Demo Class" class="fu-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        🎓 ડેમો ક્લાસ (<span id="countFuDemo">0</span>)
-                    </button>
-                    <button onclick="setFollowupFilter('overdue')" id="fuTab-overdue" class="fu-tab-btn px-3 py-1.5 rounded-xl text-xs font-bold text-red-600 whitespace-nowrap">
-                        ⚠️ સમય વીતી ગયેલ (<span id="countFuOverdue">0</span>)
-                    </button>
+                <!-- Compact Select Lists for 1st Follow-Up -->
+                <div class="grid grid-cols-2 gap-2 w-full sm:w-auto sm:min-w-[420px]">
+                    <select id="firstFollowupTypeSelect" onchange="setFollowupFilter(this.value)" class="w-full bg-purple-50 dark:bg-slate-900 border border-purple-300 dark:border-slate-700 text-xs sm:text-sm font-extrabold text-purple-900 dark:text-purple-300 rounded-xl px-3 py-2.5 outline-none min-h-[42px]">
+                        <option value="all" id="optFuAll">📋 તમામ ફોલો-અપ (0)</option>
+                        <option value="Physical Meet" id="optFuMeet">🤝 રૂબરૂ મિટિંગ (0)</option>
+                        <option value="Call Reminder" id="optFuReminder">⏰ કોલ રિમાઇન્ડર (0)</option>
+                        <option value="Demo Class" id="optFuDemo">🎓 ડેમો ક્લાસ (0)</option>
+                        <option value="overdue" id="optFuOverdue">⚠️ સમય વીતી ગયેલ (0)</option>
+                    </select>
+
+                    <select id="firstFollowupCourseSelect" onchange="setFirstFollowupCourseFilter(this.value)" class="w-full bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 text-xs sm:text-sm font-extrabold text-emerald-900 dark:text-emerald-300 rounded-xl px-3 py-2.5 outline-none min-h-[42px]">
+                        <option value="all">🎓 તમામ કોર્સ કેટેગરી</option>
+                        <option value="ai">🤖 AI Mastery કોર્સ</option>
+                        <option value="ccc">💻 CCC / Basic કોર્સ</option>
+                        <option value="tally">📊 Tally Account</option>
+                        <option value="design">🎨 DTP & Design</option>
+                        <option value="english">🗣️ Spoken English</option>
+                        <option value="web">🌐 Web Development</option>
+                        <option value="all_courses">📚 તમામ કોર્સ માહિતી</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-3.5 sm:px-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3.5" id="followupsGrid"></div>
+            <div class="flex-1 overflow-y-auto p-2.5 sm:p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3" id="followupsGrid"></div>
             </div>
         </div>
 
@@ -1064,20 +1133,31 @@
 
             <!-- Unlocked Content -->
             <div id="secondFollowupUnlockedContent" class="hidden flex-1 flex flex-col overflow-hidden">
-                <div class="p-3.5 sm:p-5 pb-2 flex flex-wrap gap-2 justify-between items-center shrink-0">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-800 rounded-md">🔓 અનલોક થયેલ</span>
-                            <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-white">૨. બીજું ફોલો-અપ (મિટિંગ & ફી ફિક્સ)</h2>
-                        </div>
-                        <p class="text-xs text-slate-500">કસ્ટમર આવ્યા કે નહીં, કોર્સ કેટલામાં ફિક્સ કર્યો અને એડવાન્સ ફી વિગત ભરીને ફાઇનલમાં મોકલો.</p>
+                <div class="px-3 py-2.5 sm:px-5 sm:py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-extrabold bg-amber-100 text-amber-800 rounded-lg">🔓 ૨. મિટિંગ</span>
+                        <h2 class="text-base sm:text-xl font-extrabold text-slate-800 dark:text-white">૨. બીજું ફોલો-અપ (મિટિંગ & ફી ફિક્સ)</h2>
                     </div>
-                    <button onclick="lockSecondFollowupTab()" class="px-3 py-2 text-xs font-bold bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl flex items-center gap-1">
-                        <i class="ph-bold ph-lock"></i> લોક કરો
-                    </button>
+
+                    <!-- Course Filter Dropdown List + Lock Button -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="secondFollowupCourseSelect" onchange="setSecondFollowupCourseFilter(this.value)" class="flex-1 sm:w-72 bg-amber-50 dark:bg-slate-900 border border-amber-300 dark:border-slate-700 text-xs sm:text-sm font-extrabold text-amber-900 dark:text-amber-300 rounded-xl px-3 py-2.5 outline-none min-h-[42px]">
+                            <option value="all" id="optSecAll">🎓 તમામ કોર્સ કેટેગરી (0)</option>
+                            <option value="ai" id="optSecAi">🤖 AI Mastery કોર્સ (0)</option>
+                            <option value="ccc" id="optSecCcc">💻 CCC / Basic કોર્સ (0)</option>
+                            <option value="tally" id="optSecTally">📊 Tally Account (0)</option>
+                            <option value="design" id="optSecDesign">🎨 DTP & Design (0)</option>
+                            <option value="english" id="optSecEnglish">🗣️ Spoken English (0)</option>
+                            <option value="web" id="optSecWeb">🌐 Web Development (0)</option>
+                            <option value="all_courses" id="optSecAllCourses">📚 તમામ કોર્સ માહિતી (0)</option>
+                        </select>
+                        <button onclick="lockSecondFollowupTab()" class="px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl flex items-center gap-1 shrink-0 min-h-[42px]">
+                            <i class="ph-bold ph-lock"></i> લોક
+                        </button>
+                    </div>
                 </div>
-                <div class="flex-1 overflow-y-auto p-3.5 sm:px-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3.5" id="secondFollowupGrid"></div>
+                <div class="flex-1 overflow-y-auto p-2.5 sm:p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3" id="secondFollowupGrid"></div>
                 </div>
             </div>
         </div>
@@ -1102,25 +1182,34 @@
 
             <!-- Unlocked Final Follow-up Content -->
             <div id="finalFollowupUnlockedContent" class="hidden flex-1 flex flex-col overflow-hidden">
-                <div class="p-3.5 sm:p-5 pb-2 flex flex-wrap gap-2 justify-between items-center shrink-0">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 rounded-md">🔓 અનલોક થયેલ</span>
-                            <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-white">૩. ફાઇનલ ફોલો-અપ (ક્લોઝ્ડ લીડ્સ & ફી સ્ટ્રક્ચર)</h2>
-                        </div>
-                        <p class="text-xs text-slate-500">બીજા ફોલો-અપમાંથી ટ્રાન્સફર થયેલ લીડ્સ — અહીંથી સીધો ગુજરાતી ફી સ્ટ્રક્ચર વોટ્સએપ મેસેજ મોકલો</p>
+                <div class="px-3 py-2.5 sm:px-5 sm:py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-extrabold bg-emerald-100 text-emerald-800 rounded-lg">🔓 ૩. ફાઇનલ</span>
+                        <h2 class="text-base sm:text-xl font-extrabold text-slate-800 dark:text-white">૩. ફાઇનલ ફોલો-અપ (ક્લોઝ્ડ લીડ્સ & ફી મેસેજ)</h2>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="openSheetPasswordModal()" class="px-3 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl flex items-center gap-1.5 shadow-sm">
-                            <i class="ph-bold ph-download-simple"></i> 7-કોલમ શીટ ડાઉનલોડ
+
+                    <!-- Course Filter Dropdown List + Actions -->
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <select id="finalFollowupCourseSelect" onchange="setFinalFollowupCourseFilter(this.value)" class="flex-1 sm:w-72 bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 text-xs sm:text-sm font-extrabold text-emerald-900 dark:text-emerald-300 rounded-xl px-3 py-2.5 outline-none min-h-[42px]">
+                            <option value="all" id="optFinAll">🎓 તમામ કોર્સ કેટેગરી (0)</option>
+                            <option value="ai" id="optFinAi">🤖 AI Mastery કોર્સ (0)</option>
+                            <option value="ccc" id="optFinCcc">💻 CCC / Basic કોર્સ (0)</option>
+                            <option value="tally" id="optFinTally">📊 Tally Account (0)</option>
+                            <option value="design" id="optFinDesign">🎨 DTP & Design (0)</option>
+                            <option value="english" id="optFinEnglish">🗣️ Spoken English (0)</option>
+                            <option value="web" id="optFinWeb">🌐 Web Development (0)</option>
+                            <option value="all_courses" id="optFinAllCourses">📚 તમામ કોર્સ માહિતી (0)</option>
+                        </select>
+                        <button onclick="openSheetPasswordModal()" class="px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm min-h-[42px]">
+                            <i class="ph-bold ph-download-simple"></i> 7-કોલમ શીટ
                         </button>
-                        <button onclick="lockFinalFollowupTab()" class="px-3 py-2 text-xs font-bold bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl flex items-center gap-1">
-                            <i class="ph-bold ph-lock"></i> લોક કરો
+                        <button onclick="lockFinalFollowupTab()" class="px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl flex items-center gap-1 min-h-[42px]">
+                            <i class="ph-bold ph-lock"></i> લોક
                         </button>
                     </div>
                 </div>
-                <div class="flex-1 overflow-y-auto p-3.5 sm:px-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3.5" id="finalFollowupGrid"></div>
+                <div class="flex-1 overflow-y-auto p-2.5 sm:p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3" id="finalFollowupGrid"></div>
                 </div>
             </div>
         </div>
@@ -1262,7 +1351,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyD3ADa0VRM7lEMOJTwfK9JsDuZCPfgFafQ",
@@ -1280,10 +1369,219 @@
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'uva-crm-app'; 
 
     let currentAgent = null;
+    let unsubscribeCustomersCloud = null;
+    let cloudSyncHealthy = true;
+    let lastCloudErrorMsg = "";
     window.duplicateShownFor = {};
     let parsedExcelRows = [];
     let activeCustomerCallTab = 'all';
     let activeFollowupFilter = 'all';
+    let activeFirstCourseFilter = 'all';
+    let activeSecondCourseFilter = 'all';
+    let activeFinalCourseFilter = 'all';
+
+    // Cloud Sync Helper Functions (Saves every lead to Firestore so all devices stay in sync)
+    const updateCloudBadgeUI = (state, msg) => {
+        const badge = document.getElementById('cloudSyncBadge');
+        const diagText = document.getElementById('cloudDiagStatusText');
+        if (diagText) diagText.innerText = msg;
+        if (!badge) return;
+
+        if (state === 'syncing') {
+            badge.className = "inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 cursor-pointer";
+            badge.innerHTML = `<i class="ph-bold ph-arrows-clockwise animate-spin"></i> ક્લાઉડ સિંક...`;
+        } else if (state === 'error') {
+            badge.className = "inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 cursor-pointer";
+            badge.innerHTML = `<i class="ph-fill ph-warning-circle"></i> ક્લાઉડ એરર (ચેક કરો)`;
+        } else {
+            badge.className = "inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 cursor-pointer";
+            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ક્લાઉડ લાઈવ (${extendedCRM.customers.filter(c=>!c.isDeleted).length})`;
+        }
+    };
+
+    window.openCloudDiagnosticModal = () => {
+        const modal = document.getElementById('cloudDiagnosticModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
+
+    window.closeCloudDiagnosticModal = () => {
+        const modal = document.getElementById('cloudDiagnosticModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+
+    // Save a single customer lead to Firestore Cloud
+    const saveCustomerToCloud = async (customerObj) => {
+        if (!auth.currentUser || !customerObj || !customerObj.id) return false;
+        try {
+            updateCloudBadgeUI('syncing', 'ક્લાઉડમાં ડેટા સેવ થઈ રહ્યો છે...');
+            const custRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', customerObj.id);
+            const timelineEvents = extendedCRM.timeline[customerObj.id] || [];
+            await setDoc(custRef, {
+                ...customerObj,
+                timelineJson: JSON.stringify(timelineEvents.slice(-30)),
+                cloudUpdatedAt: new Date().toISOString()
+            }, { merge: true });
+            cloudSyncHealthy = true;
+            updateCloudBadgeUI('ok', 'તમામ ડિવાઇસ સાથે લાઈવ સિંક ચાલુ છે.');
+            return true;
+        } catch (err) {
+            console.error("Firestore Save Error:", err);
+            cloudSyncHealthy = false;
+            lastCloudErrorMsg = err.message || "Permission Denied";
+            updateCloudBadgeUI('error', `Firebase Error: ${lastCloudErrorMsg}`);
+            return false;
+        }
+    };
+
+    // Push multiple leads in batches of 400 (for Excel Import & Local-to-Cloud migration)
+    const saveMultipleCustomersToCloud = async (customersList) => {
+        if (!auth.currentUser || !customersList || customersList.length === 0) return false;
+        try {
+            updateCloudBadgeUI('syncing', `${customersList.length} લીડ્સ ક્લાઉડમાં અપલોડ થઈ રહી છે...`);
+            const chunkSize = 400;
+            for (let i = 0; i < customersList.length; i += chunkSize) {
+                const chunk = customersList.slice(i, i + chunkSize);
+                const batch = writeBatch(db);
+                chunk.forEach(c => {
+                    if (c && c.id) {
+                        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'customers', c.id);
+                        const timelineEvents = extendedCRM.timeline[c.id] || [];
+                        batch.set(ref, {
+                            ...c,
+                            timelineJson: JSON.stringify(timelineEvents.slice(-30)),
+                            cloudUpdatedAt: new Date().toISOString()
+                        }, { merge: true });
+                    }
+                });
+                await batch.commit();
+            }
+            cloudSyncHealthy = true;
+            updateCloudBadgeUI('ok', `${customersList.length} લીડ્સ ક્લાઉડમાં સફળતાપૂર્વક સેવ થઈ ગઈ!`);
+            return true;
+        } catch (err) {
+            console.error("Firestore Batch Upload Error:", err);
+            cloudSyncHealthy = false;
+            lastCloudErrorMsg = err.message || "Permission Denied";
+            updateCloudBadgeUI('error', `Firebase Error: ${lastCloudErrorMsg}`);
+            return false;
+        }
+    };
+
+    window.forcePushAllLocalToCloud = async () => {
+        const btn = document.getElementById('forceCloudPushBtn');
+        if (!extendedCRM.customers || extendedCRM.customers.length === 0) {
+            return showAlert("આ ડિવાઇસમાં અપલોડ કરવા માટે કોઈ લીડ નથી.");
+        }
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "અપલોડ થાય છે...";
+        }
+        const ok = await saveMultipleCustomersToCloud(extendedCRM.customers);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="ph-bold ph-cloud-arrow-up text-base"></i> અપલોડ કરો`;
+        }
+        if (ok) {
+            customToast(`${extendedCRM.customers.length} લીડ્સ ક્લાઉડમાં અપલોડ થઈ ગઈ! હવે બીજા ડિવાઇસમાં દેખાશે.`);
+            closeCloudDiagnosticModal();
+        } else {
+            showAlert("ક્લાઉડમાં સેવ ન થયું! કૃપા કરીને Firebase Console માં Firestore Rules ચેક કરો.");
+        }
+    };
+
+    // Real-time listener so all logged-in devices receive imported/updated leads automatically
+    const startRealtimeCloudSync = () => {
+        if (!auth.currentUser) return;
+        if (unsubscribeCustomersCloud) unsubscribeCustomersCloud();
+
+        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+        unsubscribeCustomersCloud = onSnapshot(colRef, async (snapshot) => {
+            const cloudMap = new Map();
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data && data.id) {
+                    if (data.timelineJson) {
+                        try {
+                            extendedCRM.timeline[data.id] = JSON.parse(data.timelineJson);
+                        } catch (e) {}
+                    }
+                    cloudMap.set(data.id, data);
+                }
+            });
+
+            // Merge local-only leads with cloud leads so nothing is ever lost
+            const localCustomers = extendedCRM.customers || [];
+            const unsyncedLocal = [];
+            localCustomers.forEach(localC => {
+                if (localC && localC.id && !cloudMap.has(localC.id)) {
+                    cloudMap.set(localC.id, localC);
+                    unsyncedLocal.push(localC);
+                }
+            });
+
+            const mergedList = Array.from(cloudMap.values()).sort((a, b) => {
+                return new Date(b.created || 0).getTime() - new Date(a.created || 0).getTime();
+            });
+
+            extendedCRM.customers = mergedList;
+            normalizeCustomerRecords();
+            localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+
+            renderCustomersList();
+            renderFollowupsList();
+            renderSecondFollowupView();
+            renderFinalFollowupView();
+            updateDashboardStats();
+            updateCloudBadgeUI('ok', `ક્લાઉડ લાઈવ સિંક ચાલુ છે (${mergedList.filter(c=>!c.isDeleted).length} લીડ્સ)`);
+
+            // Automatically push any local-only leads to the cloud so other devices get them
+            if (unsyncedLocal.length > 0) {
+                await saveMultipleCustomersToCloud(unsyncedLocal);
+            }
+        }, (err) => {
+            console.error("Realtime Cloud Listener Error:", err);
+            cloudSyncHealthy = false;
+            lastCloudErrorMsg = err.message || "Permission Denied";
+            updateCloudBadgeUI('error', `Firebase Rules Error: ${lastCloudErrorMsg}`);
+        });
+    };
+
+    // Helper to match a customer's selected course or status against a course category key
+    const matchesCourseCategory = (customer, categoryKey) => {
+        if (!categoryKey || categoryKey === 'all') return true;
+        const statusStr = (customer.status || '').toLowerCase();
+        const courseStr = (customer.course || '').toLowerCase();
+        const firstStatusStr = (customer.initialInterestedStatus || '').toLowerCase();
+
+        if (categoryKey === 'ai') {
+            return statusStr === 'interested_ai' || firstStatusStr === 'interested_ai' || courseStr.includes('ai');
+        }
+        if (categoryKey === 'ccc') {
+            return statusStr === 'interested_ccc' || firstStatusStr === 'interested_ccc' || courseStr.includes('ccc') || courseStr.includes('basic');
+        }
+        if (categoryKey === 'tally') {
+            return statusStr === 'interested_tally' || firstStatusStr === 'interested_tally' || courseStr.includes('tally') || courseStr.includes('account');
+        }
+        if (categoryKey === 'design') {
+            return statusStr === 'interested_design' || firstStatusStr === 'interested_design' || courseStr.includes('dtp') || courseStr.includes('design');
+        }
+        if (categoryKey === 'english') {
+            return statusStr === 'interested_english' || firstStatusStr === 'interested_english' || courseStr.includes('english') || courseStr.includes('spoken');
+        }
+        if (categoryKey === 'web') {
+            return statusStr === 'interested_web' || firstStatusStr === 'interested_web' || courseStr.includes('web');
+        }
+        if (categoryKey === 'all_courses') {
+            return statusStr === 'interested_all' || firstStatusStr === 'interested_all' || courseStr.includes('તમામ કોર્સ') || courseStr.includes('all courses');
+        }
+        return true;
+    };
 
     // Hidden Secret Passwords
     const SECOND_FOLLOWUP_SECRET = "UVA5050";
@@ -1800,7 +2098,7 @@
         container.innerHTML = history.slice(0, 15).map(item => `
             <div class="bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs">
                 <div>
-                    <div class="font-bold text-slate-800 dark:text-white">${item.number}</div>
+                    <div class="font-bold text-slate-800 dark:text-slate-100">${item.number}</div>
                     <div class="text-[10px] text-brand-600 font-semibold">${item.mood}</div>
                 </div>
                 <span class="text-[10px] text-slate-400">${item.time}</span>
@@ -1914,6 +2212,27 @@
         return `UVA-${year}-${String(total + 1).padStart(6, '0')}`;
     };
 
+    const normalizeCustomerRecords = () => {
+        if (!extendedCRM.customers) extendedCRM.customers = [];
+        extendedCRM.customers.forEach(c => {
+            if (!c.callCompletionState) {
+                c.callCompletionState = (c.status && c.status !== 'fresh_uncalled' && c.status !== 'busy' && c.status !== 'no_answer') ? 'completed' : 'pending';
+            }
+            if (!c.pendingSubTag) {
+                c.pendingSubTag = c.callCompletionState === 'pending' ? 'Fresh / Not Dialed' : '';
+            }
+            if (!c.followUpType) {
+                c.followUpType = c.followup ? 'Call Reminder' : 'None';
+            }
+            if (c.firstFollowupNotes === undefined) {
+                c.firstFollowupNotes = c.internalNote || '';
+            }
+            if (c.secondFollowupStage === undefined) {
+                c.secondFollowupStage = (c.followUpType === 'Physical Meet' || c.followUpType === 'Demo Class') ? 'pending_second' : 'none';
+            }
+        });
+    };
+
     const initializeExtendedCRM = () => {
         const savedData = localStorage.getItem("uvaExtendedCRM");
         if (savedData) {
@@ -1925,25 +2244,7 @@
             if (!extendedCRM.settings) extendedCRM.settings = {};
             if (!extendedCRM.customers) extendedCRM.customers = [];
             if (!extendedCRM.timeline) extendedCRM.timeline = {};
-
-            // Non-destructive normalization for legacy records
-            extendedCRM.customers.forEach(c => {
-                if (!c.callCompletionState) {
-                    c.callCompletionState = (c.status && c.status !== 'fresh_uncalled' && c.status !== 'busy' && c.status !== 'no_answer') ? 'completed' : 'pending';
-                }
-                if (!c.pendingSubTag) {
-                    c.pendingSubTag = c.callCompletionState === 'pending' ? 'Fresh / Not Dialed' : '';
-                }
-                if (!c.followUpType) {
-                    c.followUpType = c.followup ? 'Call Reminder' : 'None';
-                }
-                if (c.firstFollowupNotes === undefined) {
-                    c.firstFollowupNotes = c.internalNote || '';
-                }
-                if (c.secondFollowupStage === undefined) {
-                    c.secondFollowupStage = (c.followUpType === 'Physical Meet' || c.followUpType === 'Demo Class') ? 'pending_second' : 'none';
-                }
-            });
+            normalizeCustomerRecords();
         } else {
             extendedCRM = { customers: [], timeline: {}, settings: {} };
         }
@@ -1953,6 +2254,9 @@
         renderSecondFollowupView();
         renderFinalFollowupView();
         updateDashboardStats();
+
+        // Start Real-Time Multi-Device Cloud Sync
+        startRealtimeCloudSync();
     };
 
     const logActivity = (leadId, type, title, desc, agent, oldVal = '', newVal = '') => {
@@ -2020,6 +2324,7 @@
         extendedCRM.customers.unshift(newCustomer);
         logActivity(cid, 'create', `લીડ બની [${leadIdStr}]`, `STD: ${newCustomer.edu || '-'} | નોંધ: ${newCustomer.firstFollowupNotes || '-'}`, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        saveCustomerToCloud(newCustomer);
         
         renderCustomersList();
         renderFollowupsList();
@@ -2110,6 +2415,7 @@
 
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
         let importedCount = 0;
+        const newlyImportedLeads = [];
 
         for (const row of parsedExcelRows) {
             const cid = "ID_" + Date.now() + "_" + Math.floor(Math.random() * 10000) + "_" + importedCount;
@@ -2144,17 +2450,19 @@
             };
 
             extendedCRM.customers.unshift(newCust);
+            newlyImportedLeads.push(newCust);
             logActivity(cid, 'create', `એક્સેલ ઈમ્પોર્ટ [${leadIdStr}]`, `ફ્રેશ કોલિંગ લીડ`, agentNameStr);
             syncCustomerRowToGoogleSheet(newCust, 'EXCEL_IMPORT');
             importedCount++;
         }
 
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        await saveMultipleCustomersToCloud(newlyImportedLeads);
         closeExcelImportModal();
         setCustomerCallTab('pending');
         switchTab('customers', 'કસ્ટમર લિસ્ટ (કોલિંગ)', document.getElementById('nav-customers'));
         updateDashboardStats();
-        customToast(`${importedCount} લીડ્સ કસ્ટમર ટેબમાં ઉમેરાઈ ગઈ!`);
+        customToast(`${importedCount} લીડ્સ ક્લાઉડમાં સેવ થઈ ગઈ! હવે બધા ડિવાઇસમાં દેખાશે.`);
         btn.disabled = false;
         btn.innerText = "ઈમ્પોર્ટ કરો & શીટ સિંક કરો";
     };
@@ -2267,7 +2575,6 @@
         const stdVal = document.getElementById('postCallStdInput').value.trim();
         const followupDate = document.getElementById('postCallFollowupDate').value;
         const notes = document.getElementById('postCallNotes').value.trim();
-        const autoWaChecked = document.getElementById('postCallAutoWaToggle')?.checked;
         const waMsg = window.buildPostCallWhatsAppMessage();
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
 
@@ -2283,6 +2590,7 @@
             else if (pendingSubTag === 'Wrong Number') customer.status = 'wrong_number';
         } else {
             customer.status = newStatus;
+            customer.initialInterestedStatus = newStatus; // Preserve 1st caller's course interest for 2nd & 3rd follow-up filters
             customer.course = courseLabelMap[newStatus] || customer.course;
         }
 
@@ -2303,6 +2611,7 @@
 
         logActivity(customer.id, 'call', `૧. પહેલું ફોલો-અપ (${completionState === 'completed' ? 'પૂર્ણ' : 'બાકી'})`, `કોર્સ: ${customer.course} | આગળનું પગલું: ${actionType} | નોંધ: ${notes || '-'}`, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        saveCustomerToCloud(customer);
 
         closePostCallModal();
         renderCustomersList();
@@ -2311,15 +2620,62 @@
         updateDashboardStats();
         if (currentProfileId === customer.id) openCustomerProfile(customer.id);
 
-        if ((triggerWhatsApp || autoWaChecked) && waMsg) {
-            window.open(`https://wa.me/91${customer.phone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+        // STRICT FIX: Only open WhatsApp if caller explicitly clicked the "સેવ કરો & વોટ્સએપ મોકલો" button
+        if (triggerWhatsApp === true) {
+            if (waMsg) {
+                window.open(`https://wa.me/91${customer.phone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+            } else {
+                window.open(`https://wa.me/91${customer.phone}`, '_blank');
+            }
         }
 
         await syncCustomerRowToGoogleSheet(customer, 'FIRST_FOLLOWUP_UPDATE');
-        customToast("૧. પહેલું ફોલો-અપ સેવ થઈ ગયું & ગૂગલ શીટમાં અપડેટ થયું!");
+        customToast(triggerWhatsApp ? "સેવ થઈ ગયું & વોટ્સએપ ઓપન થયું!" : "ફક્ત સેવ થઈ ગયું (વોટ્સએપ વગર)!");
+    };
+    window.submitFinalFollowup = async (sendWhatsApp = true) => {
+        const cid = document.getElementById('finalModalLeadId').value;
+        const c = extendedCRM.customers.find(x => x.id === cid);
+        if (!c) return;
+
+        const course = document.getElementById('finalCourseInput').value.trim();
+        const std = document.getElementById('finalStdInput').value.trim();
+        const totalFee = document.getElementById('finalTotalFeeInput').value.trim() || '0';
+        const advFee = document.getElementById('finalAdvanceFeeInput').value.trim() || '0';
+        const remFee = Math.max(0, Number(totalFee) - Number(advFee));
+        const finalNotes = document.getElementById('finalFollowupNotesInput').value.trim();
+
+        if (!finalNotes) {
+            return showAlert("કૃપા કરીને ફાઇનલ ફોલો-અપ નોંધ (FINAL FOLLOW UP NOTES) લખો.");
+        }
+
+        const waMsg = window.buildFinalGujaratiFeeWhatsAppMsg();
+        const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
+
+        c.course = course || c.course;
+        c.edu = std || c.edu;
+        c.fixedFee = totalFee;
+        c.advanceFee = advFee;
+        c.status = 'admission';
+        c.finalFollowupNotes = `કુલ ફી: ₹${totalFee} | જમા એડવાન્સ: ₹${advFee} | બાકી ફી: ₹${remFee} | નોંધ: ${finalNotes}`;
+        c.updated = new Date().toISOString();
+        c.lastContact = new Date().toISOString();
+
+        logActivity(c.id, 'whatsapp', `૩. ફાઇનલ ફોલો-અપ પૂર્ણ ${sendWhatsApp ? '& ફી મેસેજ મોકલ્યો' : '(ફક્ત સેવ)'}`, c.finalFollowupNotes, agentNameStr);
+        localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        saveCustomerToCloud(c);
+
+        closeFinalFollowupModal();
+        renderFinalFollowupView();
+        renderCustomersList();
+        updateDashboardStats();
+
+        if (sendWhatsApp === true) {
+            window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+        }
+        await syncCustomerRowToGoogleSheet(c, 'FINAL_FOLLOWUP_COMPLETED');
+        customToast(sendWhatsApp ? "ફાઇનલ ફોલો-અપ સેવ થઈ ગયું & વોટ્સએપ મેસેજ ખુલ્યો!" : "ફાઇનલ ફોલો-અપ ફક્ત સેવ થઈ ગયું!");
     };
 
-    // 2ND FOLLOW-UP (Password: UVA5050)
     window.unlockSecondFollowupTab = () => {
         const input = document.getElementById('secondFollowupPwdInput').value.trim();
         const errEl = document.getElementById('secondFollowupPwdError');
@@ -2340,6 +2696,13 @@
         customToast("૨. બીજું ફોલો-અપ લોક કરવામાં આવ્યું.");
     };
 
+    window.setSecondFollowupCourseFilter = (courseKey) => {
+        activeSecondCourseFilter = courseKey;
+        const sel = document.getElementById('secondFollowupCourseSelect');
+        if (sel && sel.value !== courseKey) sel.value = courseKey;
+        renderSecondFollowupView();
+    };
+
     window.renderSecondFollowupView = () => {
         const lockOverlay = document.getElementById('secondFollowupLockOverlay');
         const unlockedBox = document.getElementById('secondFollowupUnlockedContent');
@@ -2347,13 +2710,24 @@
         if (!lockOverlay || !unlockedBox || !grid) return;
 
         const allActive = extendedCRM.customers.filter(c => !c.isDeleted);
-        const secondLeads = allActive.filter(c => 
+        const allSecondLeads = allActive.filter(c => 
             (c.secondFollowupStage === 'pending_second' || c.followUpType === 'Physical Meet' || c.followUpType === 'Demo Class') &&
             c.secondFollowupStage !== 'closed_to_final'
         );
 
         const badge = document.getElementById('sidebarSecondFollowupBadge');
-        if (badge) badge.innerText = secondLeads.length;
+        if (badge) badge.innerText = allSecondLeads.length;
+
+        // Update Course Category Counts in Dropdown List
+        const setOptTxt = (id, label, val) => { const el = document.getElementById(id); if (el) el.innerText = `${label} (${val})`; };
+        setOptTxt('optSecAll', '🎓 તમામ કોર્સ કેટેગરી', allSecondLeads.length);
+        setOptTxt('optSecAi', '🤖 AI Mastery કોર્સ', allSecondLeads.filter(c => matchesCourseCategory(c, 'ai')).length);
+        setOptTxt('optSecCcc', '💻 CCC / Basic કોર્સ', allSecondLeads.filter(c => matchesCourseCategory(c, 'ccc')).length);
+        setOptTxt('optSecTally', '📊 Tally Account', allSecondLeads.filter(c => matchesCourseCategory(c, 'tally')).length);
+        setOptTxt('optSecDesign', '🎨 DTP & Design', allSecondLeads.filter(c => matchesCourseCategory(c, 'design')).length);
+        setOptTxt('optSecEnglish', '🗣️ Spoken English', allSecondLeads.filter(c => matchesCourseCategory(c, 'english')).length);
+        setOptTxt('optSecWeb', '🌐 Web Development', allSecondLeads.filter(c => matchesCourseCategory(c, 'web')).length);
+        setOptTxt('optSecAllCourses', '📚 તમામ કોર્સ માહિતી', allSecondLeads.filter(c => matchesCourseCategory(c, 'all_courses')).length);
 
         if (!isSecondFollowupUnlocked) {
             lockOverlay.classList.remove('hidden');
@@ -2364,36 +2738,41 @@
         lockOverlay.classList.add('hidden');
         unlockedBox.classList.remove('hidden');
 
+        const secondLeads = allSecondLeads.filter(c => matchesCourseCategory(c, activeSecondCourseFilter));
+
         if (secondLeads.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400">
+            grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">
                 <i class="ph-fill ph-handshake text-5xl mb-2 opacity-50"></i>
-                <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">બીજા ફોલો-અપમાં હાલ કોઈ મિટિંગ બાકી નથી</h3>
+                <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">આ કોર્સ કેટેગરીમાં બીજા ફોલો-અપ માટે કોઈ લીડ નથી</h3>
             </div>`;
             return;
         }
 
         grid.innerHTML = secondLeads.map(c => `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-amber-200 dark:border-amber-800/60 p-4 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border-2 border-amber-200 dark:border-amber-800/70 p-4 flex flex-col justify-between hover:shadow-md transition">
                 <div>
-                    <div class="flex justify-between items-start mb-2.5">
-                        <div>
-                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-100 text-purple-700">🤝 ${c.followUpType === 'Demo Class' ? 'ડેમો ક્લાસ' : 'રૂબરૂ મિટિંગ'}</span>
-                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm mt-1">${c.name}</h3>
-                            <p class="text-xs font-mono text-slate-500">${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap gap-1.5 mb-1.5">
+                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-purple-100 text-purple-700">🤝 ${c.followUpType === 'Demo Class' ? 'ડેમો ક્લાસ' : 'રૂબરૂ મિટિંગ'}</span>
+                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-900">🎓 ${c.course}</span>
+                            </div>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate">${c.name}</h3>
+                            <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-400">${c.leadId}</span>
+                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
                     </div>
-                    <div class="text-xs space-y-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl mb-3">
-                        <div><b>કોર્સ:</b> ${c.course}</div>
-                        ${c.followup ? `<div><b>મિટિંગ સમય:</b> ${new Date(c.followup).toLocaleString()}</div>` : ''}
-                        <div><b>૧. પહેલા ફોલો-અપની નોંધ:</b> ${c.firstFollowupNotes || '-'}</div>
+                    <div class="text-xs sm:text-sm space-y-1.5 text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
+                        <div><b>૧. સિલેક્ટ કરેલ કોર્સ:</b> <span class="text-brand-600 font-extrabold">${c.course}</span></div>
+                        ${c.followup ? `<div><b>⏰ મિટિંગ સમય:</b> ${new Date(c.followup).toLocaleString()}</div>` : ''}
+                        <div><b>📝 પહેલી નોંધ:</b> ${c.firstFollowupNotes || '-'}</div>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openSecondFollowupModal('${c.id}')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5">
-                        <i class="ph-bold ph-check-square-offset text-base"></i> મિટિંગ & ફી વિગત ભરો
+                    <button onclick="openSecondFollowupModal('${c.id}')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="ph-bold ph-check-square-offset text-lg"></i> મિટિંગ & ફી વિગત ભરો
                     </button>
-                    <button onclick="triggerDirectCall('${c.id}')" class="bg-brand-50 text-brand-700 border border-brand-200 px-3 py-2.5 rounded-xl text-sm">
+                    <button onclick="triggerDirectCall('${c.id}')" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-3 rounded-xl text-base shadow-sm flex items-center justify-center">
                         <i class="ph-fill ph-phone-call"></i>
                     </button>
                 </div>
@@ -2470,6 +2849,7 @@
 
         logActivity(c.id, 'note', `૨. બીજું ફોલો-અપ પૂર્ણ ➔ ફાઇનલમાં ટ્રાન્સફર`, formattedSecondNotes, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+        saveCustomerToCloud(c);
 
         closeSecondFollowupModal();
         renderSecondFollowupView();
@@ -2502,15 +2882,33 @@
         customToast("૩. ફાઇનલ ફોલો-અપ લોક કરવામાં આવ્યું.");
     };
 
+    window.setFinalFollowupCourseFilter = (courseKey) => {
+        activeFinalCourseFilter = courseKey;
+        const sel = document.getElementById('finalFollowupCourseSelect');
+        if (sel && sel.value !== courseKey) sel.value = courseKey;
+        renderFinalFollowupView();
+    };
+
     window.renderFinalFollowupView = () => {
         const lockOverlay = document.getElementById('finalFollowupLockOverlay');
         const unlockedBox = document.getElementById('finalFollowupUnlockedContent');
         const grid = document.getElementById('finalFollowupGrid');
         if (!lockOverlay || !unlockedBox || !grid) return;
 
-        const finalLeads = extendedCRM.customers.filter(c => !c.isDeleted && c.secondFollowupStage === 'closed_to_final');
+        const allFinalLeads = extendedCRM.customers.filter(c => !c.isDeleted && c.secondFollowupStage === 'closed_to_final');
         const badge = document.getElementById('sidebarFinalFollowupBadge');
-        if (badge) badge.innerText = finalLeads.length;
+        if (badge) badge.innerText = allFinalLeads.length;
+
+        // Update Course Category Counts in Dropdown List
+        const setOptTxt = (id, label, val) => { const el = document.getElementById(id); if (el) el.innerText = `${label} (${val})`; };
+        setOptTxt('optFinAll', '🎓 તમામ કોર્સ કેટેગરી', allFinalLeads.length);
+        setOptTxt('optFinAi', '🤖 AI Mastery કોર્સ', allFinalLeads.filter(c => matchesCourseCategory(c, 'ai')).length);
+        setOptTxt('optFinCcc', '💻 CCC / Basic કોર્સ', allFinalLeads.filter(c => matchesCourseCategory(c, 'ccc')).length);
+        setOptTxt('optFinTally', '📊 Tally Account', allFinalLeads.filter(c => matchesCourseCategory(c, 'tally')).length);
+        setOptTxt('optFinDesign', '🎨 DTP & Design', allFinalLeads.filter(c => matchesCourseCategory(c, 'design')).length);
+        setOptTxt('optFinEnglish', '🗣️ Spoken English', allFinalLeads.filter(c => matchesCourseCategory(c, 'english')).length);
+        setOptTxt('optFinWeb', '🌐 Web Development', allFinalLeads.filter(c => matchesCourseCategory(c, 'web')).length);
+        setOptTxt('optFinAllCourses', '📚 તમામ કોર્સ માહિતી', allFinalLeads.filter(c => matchesCourseCategory(c, 'all_courses')).length);
 
         if (!isFinalFollowupUnlocked) {
             lockOverlay.classList.remove('hidden');
@@ -2521,10 +2919,12 @@
         lockOverlay.classList.add('hidden');
         unlockedBox.classList.remove('hidden');
 
+        const finalLeads = allFinalLeads.filter(c => matchesCourseCategory(c, activeFinalCourseFilter));
+
         if (finalLeads.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400">
+            grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">
                 <i class="ph-fill ph-seal-check text-5xl mb-2 opacity-50"></i>
-                <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">ફાઇનલ ફોલો-અપમાં હજુ કોઈ લીડ નથી</h3>
+                <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">આ કોર્સ કેટેગરીમાં ફાઇનલ ફોલો-અપમાં કોઈ લીડ નથી</h3>
             </div>`;
             return;
         }
@@ -2535,34 +2935,36 @@
             const remFee = Math.max(0, totalFee - advFee);
 
             return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-800/60 p-4 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border-2 border-emerald-200 dark:border-emerald-800/70 p-4 flex flex-col justify-between hover:shadow-md transition">
                 <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800">${c.finalFollowupNotes ? '✅ ફાઇનલ મેસેજ મોકલાયો' : '⏳ ફાઇનલ ક્લોઝિંગ બાકી'}</span>
-                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm mt-1">${c.name}</h3>
-                            <p class="text-xs font-mono text-slate-500">${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap gap-1.5 mb-1.5">
+                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800">${c.finalFollowupNotes ? '✅ ફાઇનલ મેસેજ મોકલાયો' : '⏳ ફાઇનલ ક્લોઝિંગ બાકી'}</span>
+                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-blue-100 text-blue-800">🎓 ${c.course}</span>
+                            </div>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate">${c.name}</h3>
+                            <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-400">${c.leadId}</span>
+                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
                     </div>
 
-                    <div class="text-xs space-y-1.5 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
-                        <div><b>કોર્સ:</b> <span class="text-brand-600 font-bold">${c.course}</span></div>
-                        <div class="grid grid-cols-3 gap-1 pt-1 text-[11px]">
-                            <div class="bg-white dark:bg-slate-800 p-1.5 rounded text-center border">કુલ ફી<br><b>₹${totalFee}</b></div>
-                            <div class="bg-emerald-50 dark:bg-emerald-950/40 p-1.5 rounded text-center border border-emerald-200">એડવાન્સ<br><b class="text-emerald-600">₹${advFee}</b></div>
-                            <div class="bg-red-50 dark:bg-red-950/40 p-1.5 rounded text-center border border-red-200">બાકી ફી<br><b class="text-red-600">₹${remFee}</b></div>
+                    <div class="text-xs sm:text-sm space-y-2 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
+                        <div class="grid grid-cols-3 gap-1.5 text-xs">
+                            <div class="bg-white dark:bg-slate-800 p-2 rounded-lg text-center border">કુલ ફી<br><b class="text-sm">₹${totalFee}</b></div>
+                            <div class="bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-lg text-center border border-emerald-200">એડવાન્સ<br><b class="text-sm text-emerald-600">₹${advFee}</b></div>
+                            <div class="bg-red-50 dark:bg-red-950/40 p-2 rounded-lg text-center border border-red-200">બાકી ફી<br><b class="text-sm text-red-600">₹${remFee}</b></div>
                         </div>
-                        <div class="pt-1 text-[11px]"><b>૨. બીજું ફોલો-અપ:</b> ${c.secondFollowupNotes || '-'}</div>
-                        ${c.finalFollowupNotes ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400"><b>૩. ફાઇનલ નોંધ:</b> ${c.finalFollowupNotes}</div>` : ''}
+                        <div class="pt-1 text-xs"><b>૨. બીજું ફોલો-અપ:</b> ${c.secondFollowupNotes || '-'}</div>
+                        ${c.finalFollowupNotes ? `<div class="text-xs font-bold text-emerald-700 dark:text-emerald-400"><b>૩. ફાઇનલ નોંધ:</b> ${c.finalFollowupNotes}</div>` : ''}
                     </div>
                 </div>
 
                 <div class="flex gap-2">
-                    <button onclick="openFinalFollowupModal('${c.id}')" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5">
-                        <i class="ph-fill ph-whatsapp-logo text-base"></i> ફાઇનલ અપડેટ & ફી મેસેજ
+                    <button onclick="openFinalFollowupModal('${c.id}')" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="ph-fill ph-whatsapp-logo text-lg"></i> ફાઇનલ અપડેટ & ફી મેસેજ
                     </button>
-                    <button onclick="openCustomerProfile('${c.id}')" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-2.5 px-3 rounded-xl text-xs">
+                    <button onclick="openCustomerProfile('${c.id}')" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 px-3.5 rounded-xl text-xs sm:text-sm">
                         પ્રોફાઇલ
                     </button>
                 </div>
@@ -2796,6 +3198,11 @@
             activeCustomers = activeCustomers.filter(c => c.callCompletionState === 'pending' && c.pendingSubTag === pendingSubF);
         }
 
+        const courseF = document.getElementById('filterCustomerCourse')?.value || 'all';
+        if (courseF !== 'all') {
+            activeCustomers = activeCustomers.filter(c => matchesCourseCategory(c, courseF));
+        }
+
         const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
         const statusF = document.getElementById('filterStatus')?.value || 'all';
 
@@ -2813,9 +3220,9 @@
         }
 
         if (activeCustomers.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400">
+            grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">
                 <i class="ph-fill ph-phone-slash text-4xl mb-2 opacity-50"></i>
-                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300">કોઈ લીડ મળી નથી</h3>
+                <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">કોઈ લીડ મળી નથી</h3>
             </div>`;
             return;
         }
@@ -2823,35 +3230,35 @@
         grid.innerHTML = activeCustomers.map(c => {
             const isCompleted = c.callCompletionState === 'completed';
             const callBadge = isCompleted 
-                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">✅ પૂર્ણ કોલ</span>`
-                : `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">⏳ બાકી • ${c.pendingSubTag || 'Fresh'}</span>`;
+                ? `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">✅ પૂર્ણ કોલ</span>`
+                : `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300">⏳ બાકી • ${c.pendingSubTag || 'Fresh'}</span>`;
 
             return `
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between hover:shadow-md transition">
                 <div>
                     <div class="flex justify-between items-start gap-2 mb-2">
                         <div class="min-w-0">
-                            <h3 onclick="window.openCustomerProfile('${c.id}')" class="font-extrabold text-slate-800 dark:text-white text-sm truncate cursor-pointer hover:text-brand-600">${c.name}</h3>
-                            <p class="text-xs font-mono text-slate-500">${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                            <h3 onclick="window.openCustomerProfile('${c.id}')" class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate cursor-pointer hover:text-brand-600">${c.name}</h3>
+                            <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-400 shrink-0">${c.leadId}</span>
+                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
                     </div>
                     <div class="flex flex-wrap gap-1.5 mb-2.5">
                         ${callBadge}
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">${c.course}</span>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-slate-200">🎓 ${c.course}</span>
                     </div>
-                    ${c.firstFollowupNotes ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg mb-3 line-clamp-2">📝 ${c.firstFollowupNotes}</p>` : ''}
+                    ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl mb-3 line-clamp-2">📝 ${c.firstFollowupNotes}</p>` : ''}
                 </div>
 
-                <div class="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
-                    <button onclick="window.triggerDirectCall('${c.id}')" class="col-span-2 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs shadow-sm">
-                        <i class="ph-fill ph-phone-call text-sm"></i> ડાયરેક્ટ કોલ
+                <div class="grid grid-cols-4 gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-700/60">
+                    <button onclick="window.triggerDirectCall('${c.id}')" class="col-span-2 bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs sm:text-sm shadow-sm">
+                        <i class="ph-fill ph-phone-call text-base"></i> ડાયરેક્ટ કોલ
                     </button>
-                    <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-bold py-2 rounded-xl transition flex items-center justify-center text-xs" title="કોલ રિપોર્ટ અપડેટ">
-                        <i class="ph-bold ph-note-pencil text-sm"></i>
+                    <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-extrabold py-2.5 rounded-xl transition flex items-center justify-center text-sm" title="કોલ રિપોર્ટ અપડેટ">
+                        <i class="ph-bold ph-note-pencil text-base"></i>
                     </button>
-                    <button onclick="window.openCustomerProfile('${c.id}')" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-2 rounded-xl transition flex items-center justify-center text-xs" title="પ્રોફાઇલ">
-                        <i class="ph-bold ph-user-circle text-sm"></i>
+                    <button onclick="window.openCustomerProfile('${c.id}')" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold py-2.5 rounded-xl transition flex items-center justify-center text-sm" title="પ્રોફાઇલ">
+                        <i class="ph-bold ph-user-circle text-base"></i>
                     </button>
                 </div>
             </div>`;
@@ -2861,15 +3268,15 @@
     // 1. FIRST FOLLOW-UP TAB RENDER
     window.setFollowupFilter = (filterName) => {
         activeFollowupFilter = filterName;
-        document.querySelectorAll('.fu-tab-btn').forEach(btn => {
-            btn.classList.remove('bg-purple-600', 'text-white');
-            btn.classList.add('text-slate-600', 'dark:text-slate-300');
-        });
-        const activeBtn = document.getElementById(`fuTab-${filterName}`);
-        if (activeBtn) {
-            activeBtn.classList.remove('text-slate-600', 'dark:text-slate-300');
-            activeBtn.classList.add('bg-purple-600', 'text-white');
-        }
+        const sel = document.getElementById('firstFollowupTypeSelect');
+        if (sel && sel.value !== filterName) sel.value = filterName;
+        renderFollowupsList();
+    };
+
+    window.setFirstFollowupCourseFilter = (courseKey) => {
+        activeFirstCourseFilter = courseKey;
+        const sel = document.getElementById('firstFollowupCourseSelect');
+        if (sel && sel.value !== courseKey) sel.value = courseKey;
         renderFollowupsList();
     };
 
@@ -2880,40 +3287,47 @@
         const allActive = extendedCRM.customers.filter(c => !c.isDeleted);
         const allFollowups = allActive.filter(c => (c.followUpType && c.followUpType !== 'None') || c.followup);
 
-        document.getElementById('countFuAll').innerText = allFollowups.length;
-        document.getElementById('countFuMeet').innerText = allFollowups.filter(c => c.followUpType === 'Physical Meet').length;
-        document.getElementById('countFuReminder').innerText = allFollowups.filter(c => c.followUpType === 'Call Reminder').length;
-        document.getElementById('countFuDemo').innerText = allFollowups.filter(c => c.followUpType === 'Demo Class').length;
-        document.getElementById('countFuOverdue').innerText = allFollowups.filter(c => isOverdue(c.followup)).length;
+        const setOpt = (id, label, count) => { const el = document.getElementById(id); if (el) el.innerText = `${label} (${count})`; };
+        setOpt('optFuAll', '📋 તમામ ફોલો-અપ', allFollowups.length);
+        setOpt('optFuMeet', '🤝 રૂબરૂ મિટિંગ', allFollowups.filter(c => c.followUpType === 'Physical Meet').length);
+        setOpt('optFuReminder', '⏰ કોલ રિમાઇન્ડર', allFollowups.filter(c => c.followUpType === 'Call Reminder').length);
+        setOpt('optFuDemo', '🎓 ડેમો ક્લાસ', allFollowups.filter(c => c.followUpType === 'Demo Class').length);
+        setOpt('optFuOverdue', '⚠️ સમય વીતી ગયેલ', allFollowups.filter(c => isOverdue(c.followup)).length);
 
         let filtered = [...allFollowups];
         if (activeFollowupFilter === 'overdue') filtered = filtered.filter(c => isOverdue(c.followup));
         else if (activeFollowupFilter !== 'all') filtered = filtered.filter(c => c.followUpType === activeFollowupFilter);
 
+        // Apply Course Category Filter
+        filtered = filtered.filter(c => matchesCourseCategory(c, activeFirstCourseFilter));
+
         if (filtered.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400">
+            grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">
                 <i class="ph-fill ph-calendar-blank text-4xl mb-2 opacity-50"></i>
-                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300">આ વિભાગમાં કોઈ ફોલો-અપ નથી</h3>
+                <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">આ વિભાગમાં કોઈ ફોલો-અપ નથી</h3>
             </div>`;
             return;
         }
 
         grid.innerHTML = filtered.map(c => `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between hover:shadow-md transition">
                 <div>
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-100 text-purple-700">${c.followUpType || 'Follow Up'}</span>
-                        <span class="text-[10px] font-bold text-slate-400">${c.leadId}</span>
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-purple-100 text-purple-800">${c.followUpType || 'Follow Up'}</span>
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800">🎓 ${c.course}</span>
+                        </div>
+                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
                     </div>
-                    <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">${c.name}</h3>
-                    <p class="text-xs font-mono text-slate-500 mb-2">${c.phone} • ${c.course}</p>
-                    ${c.firstFollowupNotes ? `<p class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-2.5 rounded-xl mb-3">📝 ${c.firstFollowupNotes}</p>` : ''}
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug">${c.name}</h3>
+                    <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5 mb-2.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                    ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl mb-3">📝 ${c.firstFollowupNotes}</p>` : ''}
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.triggerDirectCall('${c.id}')" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1">
-                        <i class="ph-fill ph-phone-call"></i> કોલ કરો
+                    <button onclick="window.triggerDirectCall('${c.id}')" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="ph-fill ph-phone-call text-base"></i> કોલ કરો
                     </button>
-                    <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-50 text-purple-700 font-bold py-2 px-3 rounded-xl text-xs">
+                    <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 font-extrabold py-2.5 px-4 rounded-xl text-xs sm:text-sm">
                         અપડેટ
                     </button>
                 </div>
@@ -2926,6 +3340,7 @@
         showConfirmModal(`શું તમે ખરેખર લીડ ${currentProfileData.leadId} ડિલીટ કરવા માંગો છો?`, async () => {
             currentProfileData.isDeleted = true;
             localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+            await saveCustomerToCloud(currentProfileData);
             customToast("લીડ ડિલીટ કરવામાં આવી.");
             switchTab('customers', 'કસ્ટમર લિસ્ટ', document.getElementById('nav-customers'));
             updateDashboardStats();
