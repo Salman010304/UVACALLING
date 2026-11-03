@@ -202,20 +202,24 @@ service cloud.firestore {
 
 <!-- Sheet Export Password Modal (UVA5555) -->
 <div id="sheetPasswordModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[1250] hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl w-full max-w-md text-center shadow-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
         <div class="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-emerald-600">
             <i class="ph-fill ph-lock-key text-3xl"></i>
         </div>
         <h3 class="text-lg font-extrabold text-slate-800 dark:text-white mb-1">શીટ ડાઉનલોડ લોક છે</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">7-કોલમ એક્સેલ શીટ ડાઉનલોડ કરવા માટે સિક્રેટ પાસવર્ડ નાખો.</p>
-        <input type="password" id="sheetDownloadPwdInput" onkeydown="if(event.key==='Enter') verifySheetDownloadPassword()" placeholder="પાસવર્ડ નાખો..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-center font-bold tracking-widest text-base outline-none focus:ring-2 focus:ring-emerald-500 mb-2">
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">7-કોલમ એક્સેલ શીટ ડાઉનલોડ કરવા માટે સિક્રેટ પાસવર્ડ નાખો અને પ્રકાર પસંદ કરો.</p>
+        <input type="password" id="sheetDownloadPwdInput" onkeydown="if(event.key==='Enter') verifySheetDownloadPassword('closed')" placeholder="પાસવર્ડ નાખો..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-center font-bold tracking-widest text-base outline-none focus:ring-2 focus:ring-emerald-500 mb-2">
         <p id="sheetDownloadPwdError" class="text-xs text-red-500 font-bold mb-3 hidden">❌ ખોટો પાસવર્ડ! ફરી પ્રયાસ કરો.</p>
-        <div class="flex gap-2 mt-2">
-            <button onclick="closeSheetPasswordModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-sm">રદ કરો</button>
-            <button onclick="verifySheetDownloadPassword()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md text-sm flex items-center justify-center gap-1.5">
-                <i class="ph-bold ph-download-simple"></i> ડાઉનલોડ
+        
+        <div class="flex flex-col gap-2.5 mt-3">
+            <button onclick="verifySheetDownloadPassword('closed')" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md text-xs sm:text-sm flex items-center justify-center gap-2">
+                <i class="ph-bold ph-seal-check text-lg"></i> ૧. ફક્ત પૂર્ણ ક્લોઝ્ડ ડેટા ડાઉનલોડ (Closed All Parts)
             </button>
+            <button onclick="verifySheetDownloadPassword('pending')" class="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl shadow-md text-xs sm:text-sm flex items-center justify-center gap-2">
+                <i class="ph-bold ph-clock-countdown text-lg"></i> ૨. પેન્ડિંગ / બાકી ડેટા ડાઉનલોડ (Pending Data)
+            </button>
+            <button onclick="closeSheetPasswordModal()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs">રદ કરો</button>
         </div>
     </div>
 </div>
@@ -249,7 +253,7 @@ service cloud.firestore {
                 <div class="p-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded font-bold">CUSTOMER NAME</div>
                 <div class="p-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded font-bold">MO NO *</div>
                 <div class="p-1 bg-slate-100 dark:bg-slate-700 rounded">STD</div>
-                <div class="p-1 bg-slate-100 dark:bg-slate-700 rounded">CITY</div>
+                <div class="p-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded font-bold">AREA / CITY</div>
             </div>
         </div>
 
@@ -271,6 +275,7 @@ service cloud.firestore {
                             <th class="p-2">નામ</th>
                             <th class="p-2">મોબાઈલ</th>
                             <th class="p-2">ધોરણ (STD)</th>
+                            <th class="p-2">એરિયા (AREA)</th>
                         </tr>
                     </thead>
                     <tbody id="excelPreviewTbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
@@ -343,7 +348,7 @@ service cloud.firestore {
 
             <!-- Course & Interest (For Completed Call) -->
             <div id="postCallCourseSection" class="space-y-3 bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
                         <label class="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1 block">🎓 કસ્ટમરનો રસ / કોર્સ (INTERESTED OR NOT) *</label>
                         <select id="postCallStatus" onchange="updatePostCallWaPreview()" class="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-xl p-2.5 text-xs font-bold text-slate-800 dark:text-white">
@@ -361,16 +366,11 @@ service cloud.firestore {
                     </div>
                     <div>
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 block">📚 ધોરણ / અભ્યાસ (STD)</label>
-                        <input type="text" id="postCallStdInput" placeholder="ઉદા. 12th, B.Com, Graduate..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold">
+                        <input type="text" id="postCallStdInput" placeholder="ઉદા. 12th, B.Com..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold">
                     </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input type="url" id="postCallBrochure" oninput="updatePostCallWaPreview()" placeholder="બ્રોશર લિંક (Optional)..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs">
-                    <div class="flex flex-wrap gap-1 items-center">
-                        <button type="button" onclick="appendPostCallOffer('૧૦% ડિસ્કાઉન્ટ')" class="px-2 py-1 text-[10px] font-bold bg-green-100 text-green-700 rounded-md">+ ૧૦% ડિસ્કાઉન્ટ</button>
-                        <button type="button" onclick="appendPostCallOffer('ફ્રી ડેમો ક્લાસ')" class="px-2 py-1 text-[10px] font-bold bg-blue-100 text-blue-700 rounded-md">+ ફ્રી ડેમો</button>
-                        <button type="button" onclick="appendPostCallOffer('હપ્તાની સગવડ')" class="px-2 py-1 text-[10px] font-bold bg-purple-100 text-purple-700 rounded-md">+ હપ્તા સગવડ</button>
+                    <div>
+                        <label class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block">📍 એરિયા / વિસ્તાર (AREA Box)</label>
+                        <input type="text" id="postCallAreaInput" placeholder="એરિયા / ગામ / સોસાયટી..." class="w-full bg-blue-50/50 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold">
                     </div>
                 </div>
             </div>
@@ -408,12 +408,15 @@ service cloud.firestore {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">ફોલો-અપ / મિટિંગ તારીખ</label>
-                    <input type="datetime-local" id="postCallFollowupDate" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">ફોલો-અપ / મિટિંગ તારીખ (નહીં ભરો તો ખાલી રહેશે)</label>
+                        <button type="button" onclick="document.getElementById('postCallFollowupDate').value=''" class="text-[10px] font-bold text-red-500 hover:underline">ખાલી રાખો (Clear)</button>
+                    </div>
+                    <input type="datetime-local" id="postCallFollowupDate" value="" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">FIRST FOLLOW UP NOTES *</label>
-                    <input type="text" id="postCallNotes" oninput="updatePostCallWaPreview()" placeholder="કસ્ટમર સાથે થયેલ વાતચીતની નોંધ..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">FIRST FOLLOW UP NOTES (પહેલા કોલરની નોંધ - ખાલી બોક્સ) *</label>
+                    <input type="text" id="postCallNotes" value="" placeholder="પહેલા કોલરે વાતચીત બાદ અહીં નોંધ લખવી..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs">
                 </div>
             </div>
 
@@ -423,16 +426,14 @@ service cloud.firestore {
                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-200 flex items-center gap-1">
                         <i class="ph-fill ph-whatsapp-logo"></i> વોટ્સએપ મેસેજ પ્રિવ્યુ
                     </span>
-                    <label class="flex items-center gap-1 text-[11px] font-bold text-emerald-900 dark:text-white cursor-pointer">
-                        <input type="checkbox" id="postCallAutoWaToggle" checked class="rounded text-brand-600"> સેવ કરતા તરત વોટ્સએપ મોકલો
-                    </label>
                 </div>
                 <div id="postCallWaPreviewText" class="text-xs text-slate-800 dark:text-slate-100 whitespace-pre-wrap max-h-24 overflow-y-auto leading-snug font-sans"></div>
             </div>
         </div>
 
         <div class="flex gap-2.5 mt-5">
-            <button onclick="savePostCallOutcome(false)" class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white font-bold text-xs">
+            <button onclick="closePostCallModal()" class="py-3 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs">રદ કરો</button>
+            <button onclick="savePostCallOutcome(false)" class="py-3 px-4 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs">
                 ફક્ત સેવ કરો
             </button>
             <button onclick="savePostCallOutcome(true)" class="flex-1 py-3.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2">
@@ -442,160 +443,145 @@ service cloud.firestore {
     </div>
 </div>
 
-<!-- 2nd Follow-Up Closing Modal -->
-<div id="secondFollowupModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1180] hidden items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white dark:bg-slate-800 p-5 sm:p-7 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[92dvh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
-        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-brand-500"></div>
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+<!-- 2nd Follow-Up Modal (Meeting & Fee Fixing) -->
+<div id="secondFollowupModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1160] hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 p-5 sm:p-7 rounded-t-3xl sm:rounded-3xl w-full max-w-xl max-h-[94dvh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+        <div class="flex items-center justify-between mb-4">
             <div>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-700">૨. બીજું ફોલો-અપ • મિટિંગ & ફી ફિક્સ</span>
-                <h3 class="text-lg font-extrabold text-slate-800 dark:text-white mt-1" id="secModalCustomerName">કસ્ટમર નામ</h3>
-                <p class="text-xs text-slate-500" id="secModalCustomerPhone">+91 0000000000</p>
+                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">૨. બીજું ફોલો-અપ • મિટિંગ રિપોર્ટ</span>
+                <h3 class="text-lg font-extrabold text-slate-800 dark:text-white mt-0.5" id="secModalCustomerName">કસ્ટમર નામ</h3>
+                <p class="text-xs text-slate-500 font-mono" id="secModalCustomerPhone">+91 0000000000</p>
             </div>
-            <button onclick="closeSecondFollowupModal()" class="p-2 text-slate-400 hover:text-slate-700 rounded-full"><i class="ph ph-x text-xl"></i></button>
+            <button onclick="closeSecondFollowupModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-full"><i class="ph ph-x text-xl"></i></button>
         </div>
-
         <input type="hidden" id="secModalLeadId">
 
-        <div class="space-y-4">
+        <div class="space-y-3.5 text-xs">
+            <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-slate-900 border border-amber-200 dark:border-slate-700 space-y-1">
+                <div><b>📍 એરિયા:</b> <span id="secModalAreaDisplay" class="font-bold text-blue-600">-</span></div>
+                <div><b>📝 ૧. પહેલા કોલરની નોંધ:</b> <span id="secModalFirstNotesDisplay" class="font-bold">-</span></div>
+            </div>
+
             <div>
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5 block">૧. કસ્ટમર મિટિંગ / રૂબરૂ આવ્યા હતા કે નહીં? *</label>
-                <div class="grid grid-cols-3 gap-2">
+                <label class="font-bold text-slate-500 uppercase block mb-1.5">કસ્ટમર મિટિંગ / ડેમો માટે આવ્યા હતા?</label>
+                <div class="grid grid-cols-2 gap-2">
                     <label class="cursor-pointer">
                         <input type="radio" name="secVisitStatus" value="હા, રૂબરૂ આવ્યા હતા" checked class="peer hidden">
-                        <div class="p-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 text-center text-xs font-bold">
-                            ✅ હા, આવ્યા હતા
-                        </div>
+                        <div class="p-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 font-bold text-center">✅ હા, રૂબરૂ આવ્યા હતા</div>
                     </label>
                     <label class="cursor-pointer">
-                        <input type="radio" name="secVisitStatus" value="ના, નથી આવ્યા" class="peer hidden">
-                        <div class="p-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 text-center text-xs font-bold">
-                            ❌ ના, નથી આવ્યા
-                        </div>
-                    </label>
-                    <label class="cursor-pointer">
-                        <input type="radio" name="secVisitStatus" value="નવો સમય આપ્યો" class="peer hidden">
-                        <div class="p-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 text-center text-xs font-bold">
-                            🔄 નવો સમય આપ્યો
-                        </div>
+                        <input type="radio" name="secVisitStatus" value="ના, હજુ નથી આવ્યા" class="peer hidden">
+                        <div class="p-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-900/20 font-bold text-center">⏳ ના, હજુ નથી આવ્યા</div>
                     </label>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 block">૨. કસ્ટમરનો પ્રતિભાવ *</label>
-                    <select id="secCustomerResponse" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold">
-                        <option value="એડમિશન કન્ફર્મ (Admission Confirmed)">🎉 એડમિશન કન્ફર્મ</option>
-                        <option value="ફી / વાલીને પૂછીને કહેશે">👨‍👩‍👦 વાલીને પૂછીને કહેશે</option>
-                        <option value="ડેમો ક્લાસમાં બેઠા છે">🎓 ડેમો ક્લાસમાં બેઠા છે</option>
-                        <option value="હજુ વિચારે છે (Thinking)">🤔 હજુ વિચારે છે</option>
-                        <option value="રસ નથી / કેન્સલ (Closed Lost)">❌ રસ નથી / કેન્સલ</option>
+                    <label class="font-bold text-slate-500 uppercase block mb-1">કસ્ટમરનો પ્રતિભાવ</label>
+                    <select id="secCustomerResponse" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
+                        <option value="એડમિશન કન્ફર્મ">🎉 એડમિશન કન્ફર્મ</option>
+                        <option value="૨ દિવસમાં ફી ભરશે">📅 ૨ દિવસમાં ફી ભરશે</option>
+                        <option value="વાલી સાથે વાત કરીને કહેશે">👨‍👩‍👦 વાલી સાથે વાત કરીને કહેશે</option>
+                        <option value="રસ નથી (Not Interested)">❌ રસ નથી (Lost)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 block">૩. ફાઇનલ કોર્સ</label>
-                    <input type="text" id="secFinalCourse" placeholder="ઉદા. AI Mastery / Tally" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold">
-                </div>
-            </div>
-
-            <!-- Fee Fix & Advance Status -->
-            <div class="p-3.5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/60 space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1 block">💰 કોર્સ કેટલામાં ફિક્સ કરેલ છે? (₹) *</label>
-                        <input type="number" id="secFixedFeeAmount" placeholder="ઉદા. 12000" class="w-full bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 rounded-xl p-2.5 text-sm font-extrabold text-slate-800 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="text-xs font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1 block">💵 એડવાન્સ ફી આપેલ છે કે બાકી? *</label>
-                        <select id="secAdvanceFeeStatus" class="w-full bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 rounded-xl p-2.5 text-xs font-bold">
-                            <option value="એડવાન્સ ફી આપેલ છે">✅ એડવાન્સ ફી આપેલ છે (Paid)</option>
-                            <option value="એડવાન્સ ફી બાકી છે">⏳ એડવાન્સ ફી બાકી છે (Pending)</option>
-                            <option value="પુરી ફી ભરાઈ ગઈ છે">🎉 પુરી ફી ભરાઈ ગઈ છે (Full Paid)</option>
-                        </select>
-                    </div>
+                    <label class="font-bold text-slate-500 uppercase block mb-1">ફાઇનલ કરેલ કોર્સ</label>
+                    <input type="text" id="secFinalCourse" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1 block">જમા કરાવેલ એડવાન્સ રકમ (₹) (જો આપી હોય તો)</label>
-                    <input type="number" id="secAdvancePaidAmount" placeholder="ઉદા. 2000" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold">
+                    <label class="font-bold text-emerald-700 dark:text-emerald-400 uppercase block mb-1">કોર્સ કેટલામાં ફિક્સ કરેલ છે? (₹ કુલ ફી)</label>
+                    <input type="number" id="secFixedFeeAmount" placeholder="ઉદા. 8500" class="w-full bg-emerald-50/50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 rounded-xl p-2.5 font-extrabold">
                 </div>
-            </div>
-
-            <div>
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 block">SECOND FOLLOW UP NOTES (બીજા ફોલો-અપની નોંધ) *</label>
-                <textarea id="secClosingNotes" rows="2" placeholder="મિટિંગમાં શું વાત થઈ અને બાકી ફી ક્યારે આપશે તેની વિગત..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs"></textarea>
+                <div>
+                    <label class="font-bold text-slate-500 uppercase block mb-1">એડવાન્સ ફી આપેલ છે કે બાકી?</label>
+                    <select id="secAdvanceFeeStatus" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
+                        <option value="એડવાન્સ ફી આપેલ છે">✅ એડવાન્સ ફી આપેલ છે</option>
+                        <option value="એડવાન્સ ફી બાકી છે">⏳ એડવાન્સ ફી બાકી છે</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="font-bold text-slate-500 uppercase block mb-1">જમા કરેલ એડવાન્સ રકમ (₹)</label>
+                    <input type="number" id="secAdvancePaidAmount" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="font-bold text-slate-500 uppercase block mb-1">SECOND FOLLOW UP NOTES (બીજા ફોલો-અપની નોંધ) *</label>
+                    <textarea id="secClosingNotes" rows="2" placeholder="મિટિંગ અને ક્લોઝિંગ અંગેની નોંધ..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-semibold"></textarea>
+                </div>
             </div>
         </div>
 
-        <div class="flex gap-3 mt-5">
-            <button onclick="closeSecondFollowupModal()" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs">રદ કરો</button>
-            <button onclick="submitSecondFollowupToFinal()" class="flex-[2] py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2">
-                <i class="ph-bold ph-paper-plane-Right text-lg"></i> સબમિટ કરો & ફાઇનલ ફોલો-અપમાં મોકલો
+        <div class="flex gap-2.5 mt-5">
+            <button onclick="closeSecondFollowupModal()" class="py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs">રદ કરો</button>
+            <button onclick="submitSecondFollowupToFinal()" class="flex-1 py-3.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2">
+                <i class="ph-bold ph-check-circle text-lg"></i> સેવ કરો & ૩. ફાઇનલ ફોલો-અપમાં મોકલો
             </button>
         </div>
     </div>
 </div>
 
-<!-- Final Follow-Up Modal (Sends Gujarati WhatsApp Fee Structure) -->
-<div id="finalFollowupModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1190] hidden items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white dark:bg-slate-800 p-5 sm:p-7 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[92dvh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
-        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 to-green-600"></div>
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+<!-- 3rd / Final Follow-Up Modal (Fee Structure & WhatsApp) -->
+<div id="finalFollowupModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[1170] hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 p-5 sm:p-7 rounded-t-3xl sm:rounded-3xl w-full max-w-xl max-h-[94dvh] overflow-y-auto shadow-2xl border border-slate-100 dark:border-slate-700 relative">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+        <div class="flex items-center justify-between mb-4">
             <div>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">૩. ફાઇનલ ફોલો-અપ • એડમિશન & ફી સ્ટ્રક્ચર મેસેજ</span>
-                <h3 class="text-lg font-extrabold text-slate-800 dark:text-white mt-1" id="finalModalCustomerName">કસ્ટમર નામ</h3>
-                <p class="text-xs text-slate-500" id="finalModalCustomerPhone">+91 0000000000</p>
+                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">૩. ફાઇનલ ફોલો-અપ • ક્લોઝિંગ</span>
+                <h3 class="text-lg font-extrabold text-slate-800 dark:text-white mt-0.5" id="finalModalCustomerName">કસ્ટમર નામ</h3>
+                <p class="text-xs text-slate-500 font-mono" id="finalModalCustomerPhone">+91 0000000000</p>
             </div>
-            <button onclick="closeFinalFollowupModal()" class="p-2 text-slate-400 hover:text-slate-700 rounded-full"><i class="ph ph-x text-xl"></i></button>
+            <button onclick="closeFinalFollowupModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-full"><i class="ph ph-x text-xl"></i></button>
         </div>
-
         <input type="hidden" id="finalModalLeadId">
 
-        <div class="space-y-3.5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1">
+                <div><b>📝 ૧. પહેલા કોલરની નોંધ:</b> <span id="finalModalFirstNotesDisplay" class="font-bold">-</span></div>
+                <div><b>🤝 ૨. બીજા કોલરની નોંધ:</b> <span id="finalModalSecondNotesDisplay" class="font-bold text-amber-600">-</span></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 block">ફાઇનલ કોર્સ *</label>
-                    <input type="text" id="finalCourseInput" oninput="updateFinalWaPreview()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold">
+                    <label class="font-bold text-slate-500 uppercase block mb-1">ફાઇનલ કોર્સ</label>
+                    <input type="text" id="finalCourseInput" oninput="updateFinalWaPreview()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 block">ધોરણ / અભ્યાસ (STD)</label>
-                    <input type="text" id="finalStdInput" oninput="updateFinalWaPreview()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-bold">
+                    <label class="font-bold text-slate-500 uppercase block mb-1">ધોરણ / અભ્યાસ (STD)</label>
+                    <input type="text" id="finalStdInput" oninput="updateFinalWaPreview()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-500 uppercase block mb-1">નક્કી કરેલ કુલ ફી (₹)</label>
+                    <input type="number" id="finalTotalFeeInput" oninput="updateFinalWaPreview()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-extrabold">
+                </div>
+                <div>
+                    <label class="font-bold text-emerald-600 uppercase block mb-1">જમા એડવાન્સ ફી (₹)</label>
+                    <input type="number" id="finalAdvanceFeeInput" oninput="updateFinalWaPreview()" class="w-full bg-emerald-50/50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 rounded-xl p-2.5 font-extrabold">
+                </div>
+                <div>
+                    <label class="font-bold text-red-500 uppercase block mb-1">બાકી ફી (Remaining)</label>
+                    <input type="text" id="finalRemainingFeeDisplay" readonly class="w-full bg-red-50/50 dark:bg-slate-900 border border-red-200 dark:border-slate-700 rounded-xl p-2.5 font-extrabold text-red-600">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-500 uppercase block mb-1">FINAL FOLLOW UP NOTES *</label>
+                    <input type="text" id="finalFollowupNotesInput" oninput="updateFinalWaPreview()" placeholder="ફાઇનલ ક્લોઝિંગ નોંધ..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-bold">
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-2.5 bg-emerald-50/60 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-800">
-                <div>
-                    <label class="text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 uppercase mb-1 block">નક્કી કરેલ કુલ ફી (₹)</label>
-                    <input type="number" id="finalTotalFeeInput" oninput="updateFinalWaPreview()" class="w-full bg-white dark:bg-slate-900 border border-emerald-300 rounded-xl p-2 text-xs font-extrabold">
-                </div>
-                <div>
-                    <label class="text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 uppercase mb-1 block">જમા એડવાન્સ ફી (₹)</label>
-                    <input type="number" id="finalAdvanceFeeInput" oninput="updateFinalWaPreview()" class="w-full bg-white dark:bg-slate-900 border border-emerald-300 rounded-xl p-2 text-xs font-extrabold">
-                </div>
-                <div>
-                    <label class="text-[10px] font-extrabold text-red-600 uppercase mb-1 block">બાકી ફી (₹)</label>
-                    <input type="text" id="finalRemainingFeeDisplay" readonly class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 rounded-xl p-2 text-xs font-extrabold text-red-600">
-                </div>
-            </div>
-
-            <div>
-                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 block">FINAL FOLLOW UP NOTES (ફાઇનલ ફોલો-અપ નોંધ અને હપ્તા વિગત) *</label>
-                <textarea id="finalFollowupNotesInput" rows="2" oninput="updateFinalWaPreview()" placeholder="બેચ સમય, બાકી ફીની તારીખ અથવા ખાસ નોંધ..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs"></textarea>
-            </div>
-
-            <!-- Gujarati WhatsApp Fee Structure Preview -->
-            <div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-3 rounded-2xl border border-emerald-300 dark:border-emerald-700">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-200 block mb-1">
-                    <i class="ph-fill ph-whatsapp-logo"></i> વિદ્યાર્થીને મોકલવાનો ગુજરાતી ફી સ્ટ્રક્ચર મેસેજ:
-                </span>
-                <div id="finalWaPreviewBox" class="text-xs text-slate-800 dark:text-slate-100 whitespace-pre-wrap max-h-32 overflow-y-auto leading-snug font-sans"></div>
+            <div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-3 rounded-2xl border border-emerald-300 dark:border-emerald-800">
+                <span class="text-[10px] font-extrabold uppercase text-emerald-800 dark:text-emerald-200 block mb-1">વોટ્સએપ ફી સ્ટ્રક્ચર મેસેજ પ્રિવ્યુ:</span>
+                <div id="finalWaPreviewBox" class="text-xs text-slate-800 dark:text-slate-100 whitespace-pre-wrap max-h-28 overflow-y-auto"></div>
             </div>
         </div>
 
-        <div class="flex gap-3 mt-5">
-            <button onclick="closeFinalFollowupModal()" class="py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs">રદ કરો</button>
-            <button onclick="submitFinalFollowupAndSendWA()" class="flex-1 py-3.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2">
-                <i class="ph-fill ph-whatsapp-logo text-lg"></i> ફાઇનલ સબમિટ & વોટ્સએપ મેસેજ મોકલો
+        <div class="flex gap-2.5 mt-5">
+            <button onclick="closeFinalFollowupModal()" class="py-3 px-3.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs">રદ કરો</button>
+            <button onclick="submitFinalFollowup(false)" class="py-3 px-4 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs">
+                ફક્ત સેવ કરો
+            </button>
+            <button onclick="submitFinalFollowup(true)" class="flex-1 py-3.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2">
+                <i class="ph-fill ph-whatsapp-logo text-lg"></i> સેવ & વોટ્સએપ મોકલો
             </button>
         </div>
     </div>
@@ -879,6 +865,32 @@ service cloud.firestore {
                     <div class="w-9 h-9 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-full flex items-center justify-center"><i class="ph-fill ph-seal-check text-lg"></i></div>
                 </div>
             </div>
+
+            <!-- 1st Caller Daily Call Performance Section (Dashboard - Only 1st Caller Shown, 2nd Caller Kept Private) -->
+            <div class="mt-6 bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 shadow-soft border border-slate-100 dark:border-slate-700">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-2xl bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center">
+                            <i class="ph-fill ph-phone-Outgoing text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-white">📞 પહેલા કોલરનો દૈનિક કોલ રિપોર્ટ (1st Caller Daily Report)</h3>
+                            <p class="text-[11px] text-slate-500">આખા દિવસમાં પહેલા કોલરે કેટલા કોલ કર્યા અને કેટલા પૂર્ણ થયા તેની તારીખ/સમય સાથે વિગત</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">
+                            આજના પૂર્ણ કોલ્સ: <span id="dashFirstCallerTodayCount">0</span>
+                        </span>
+                        <span class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-extrabold text-xs">
+                            કુલ પૂર્ણ કોલ્સ: <span id="dashFirstCallerTotalCount">0</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 7-Day Mini Chart for 1st Caller Only -->
+                <div id="dashFirstCallerDailyBars" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5"></div>
+            </div>
         </div>
 
         <!-- NEW LEAD TAB -->
@@ -957,16 +969,12 @@ service cloud.firestore {
                                 <label>ફોલો-અપ તારીખ</label>
                             </div>
                             <div class="input-group sm:col-span-2">
-                                <input type="url" id="brochureLink" oninput="updatePreview()" placeholder=" " class="dark:bg-slate-900/50">
-                                <label>બ્રોશર લિંક (Optional)</label>
-                            </div>
-                            <div class="input-group sm:col-span-2">
-                                <textarea id="customNote" rows="2" oninput="updatePreview()" placeholder=" " class="dark:bg-slate-900/50"></textarea>
-                                <label>FIRST FOLLOW UP NOTES (પહેલા ફોલો-અપની નોંધ)</label>
+                                <textarea id="customNote" rows="2" placeholder=" " class="dark:bg-slate-900/50"></textarea>
+                                <label>FIRST FOLLOW UP NOTES (પહેલા ફોલો-અપની આંતરિક નોંધ - વોટ્સએપમાં નહીં જાય)</label>
                             </div>
                             <div class="input-group sm:col-span-2">
                                 <textarea id="callerInternalNote" rows="2" placeholder=" " class="dark:bg-slate-900/50"></textarea>
-                                <label>આંતરિક નોંધ (Internal Note)</label>
+                                <label>વધારાની આંતરિક નોંધ (Internal Note)</label>
                             </div>
                         </div>
 
@@ -1184,13 +1192,13 @@ service cloud.firestore {
             <div id="finalFollowupUnlockedContent" class="hidden flex-1 flex flex-col overflow-hidden">
                 <div class="px-3 py-2.5 sm:px-5 sm:py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0 shadow-sm">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 text-xs font-extrabold bg-emerald-100 text-emerald-800 rounded-lg">🔓 ૩. ફાઇનલ</span>
-                        <h2 class="text-base sm:text-xl font-extrabold text-slate-800 dark:text-white">૩. ફાઇનલ ફોલો-અપ (ક્લોઝ્ડ લીડ્સ & ફી મેસેજ)</h2>
+                        <span class="px-2 py-0.5 text-xs font-extrabold bg-emerald-100 text-emerald-800 rounded-lg">🔓 ૩. ફાઇનલ રિવ્યુ</span>
+                        <h2 class="text-base sm:text-xl font-extrabold text-slate-800 dark:text-white">૩. ફાઇનલ ફોલો-અપ & કોલર રિવ્યુ સ્ટેટિસ્ટિક્સ</h2>
                     </div>
 
                     <!-- Course Filter Dropdown List + Actions -->
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        <select id="finalFollowupCourseSelect" onchange="setFinalFollowupCourseFilter(this.value)" class="flex-1 sm:w-72 bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 text-xs sm:text-sm font-extrabold text-emerald-900 dark:text-emerald-300 rounded-xl px-3 py-2.5 outline-none min-h-[42px]">
+                        <select id="finalFollowupCourseSelect" onchange="setFinalFollowupCourseFilter(this.value)" class="flex-1 sm:w-64 bg-emerald-50 dark:bg-slate-900 border border-emerald-300 dark:border-slate-700 text-xs sm:text-sm font-extrabold text-emerald-900 dark:text-emerald-300 rounded-xl px-3 py-2.5 outline-none min-h-[42px]">
                             <option value="all" id="optFinAll">🎓 તમામ કોર્સ કેટેગરી (0)</option>
                             <option value="ai" id="optFinAi">🤖 AI Mastery કોર્સ (0)</option>
                             <option value="ccc" id="optFinCcc">💻 CCC / Basic કોર્સ (0)</option>
@@ -1200,6 +1208,12 @@ service cloud.firestore {
                             <option value="web" id="optFinWeb">🌐 Web Development (0)</option>
                             <option value="all_courses" id="optFinAllCourses">📚 તમામ કોર્સ માહિતી (0)</option>
                         </select>
+                        <button onclick="toggleFinalAnalyticsPanel()" class="px-3.5 py-2.5 text-xs sm:text-sm font-extrabold bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm min-h-[42px]">
+                            <i class="ph-bold ph-chart-bar"></i> દૈનિક ચાર્ટ & રિપોર્ટ
+                        </button>
+                        <button onclick="downloadFinalCallerActivityExcel()" class="px-3.5 py-2.5 text-xs sm:text-sm font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm min-h-[42px]">
+                            <i class="ph-bold ph-file-xls"></i> એક્ટિવિટી ડાઉનલોડ
+                        </button>
                         <button onclick="openSheetPasswordModal()" class="px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm min-h-[42px]">
                             <i class="ph-bold ph-download-simple"></i> 7-કોલમ શીટ
                         </button>
@@ -1208,7 +1222,54 @@ service cloud.firestore {
                         </button>
                     </div>
                 </div>
-                <div class="flex-1 overflow-y-auto p-2.5 sm:p-4">
+                <div class="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-4">
+                    <!-- Private Final Review Statistics & Daily Chart Panel (Shows 1st Caller + Private 2nd Caller + Final Closing Stats) -->
+                    <div id="finalCallerAnalyticsPanel" class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 shadow-soft border-2 border-purple-200 dark:border-purple-900/60 space-y-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 uppercase">🔒 પ્રાઇવેટ ફાઇનલ રિવ્યુ એનાલિટિક્સ</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white mt-1">📊 ૧. પહેલો કોલર vs ૨. બીજો કોલર (Private) vs ૩. ફાઇનલ ક્લોઝિંગ ચાર્ટ</h3>
+                                <p class="text-xs text-slate-500">દૈનિક તારીખ અને સમય મુજબ કયા કોલરે કેટલા કોલ લીધા અને કેટલા ક્લોઝ કર્યા તેનો સંપૂર્ણ હિસાબ</p>
+                            </div>
+                            <button onclick="downloadFinalCallerActivityExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-2 shrink-0">
+                                <i class="ph-bold ph-download-simple text-base"></i> કોલર એક્ટિવિટી & ડેઇલી રિપોર્ટ ડાઉનલોડ
+                            </button>
+                        </div>
+
+                        <!-- Summary KPI Cards inside Final Review -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-slate-900 border border-blue-200 dark:border-slate-700">
+                                <span class="text-[11px] font-extrabold text-blue-700 dark:text-blue-400 block">૧. પહેલા કોલરે પૂર્ણ કરેલ (આજે / કુલ)</span>
+                                <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1" id="finStatFirstCaller">0 / 0</div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-slate-900 border border-amber-200 dark:border-slate-700">
+                                <span class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 block">🔒 ૨. બીજા કોલરે ક્લોઝ કરેલ (આજે / કુલ)</span>
+                                <div class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-1" id="finStatSecondCaller">0 / 0</div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-slate-900 border border-emerald-200 dark:border-slate-700">
+                                <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block">૩. ફાઇનલ ક્લોઝ્ડ એડમિશન (આજે / કુલ)</span>
+                                <div class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-1" id="finStatFinalCaller">0 / 0</div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-slate-900 border border-purple-200 dark:border-slate-700">
+                                <span class="text-[11px] font-extrabold text-purple-700 dark:text-purple-400 block">કુલ એક્ટિવિટી લોગ્સ</span>
+                                <div class="text-xl sm:text-2xl font-extrabold text-purple-600 mt-1" id="finStatTotalLogs">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Daily Comparison Bar Chart (Last 7 Days) -->
+                        <div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">📅 છેલ્લા ૭ દિવસનો દૈનિક ચાર્ટ (Daily Wise Caller Chart)</h4>
+                                <div class="flex flex-wrap gap-3 text-[11px] font-bold">
+                                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500 inline-block"></span> ૧. પહેલો કોલર પૂર્ણ</span>
+                                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-500 inline-block"></span> ૨. બીજો કોલર ક્લોઝ (Private)</span>
+                                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> ૩. ફાઇનલ ક્લોઝ</span>
+                                </div>
+                            </div>
+                            <div id="finalDailyChartContainer" class="grid grid-cols-1 sm:grid-cols-7 gap-2.5 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700"></div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3" id="finalFollowupGrid"></div>
                 </div>
             </div>
@@ -1231,6 +1292,7 @@ service cloud.firestore {
                         </div>
                         <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs text-slate-500 font-medium">
                             <span><i class="ph ph-phone"></i> <span id="profPhone"></span></span>
+                            <span><i class="ph ph-map-pin"></i> એરિયા: <span id="profArea" class="font-bold text-blue-600 dark:text-blue-400"></span></span>
                             <span><i class="ph ph-student"></i> STD: <span id="profEdu"></span></span>
                             <span><i class="ph ph-briefcase"></i> <span id="profCourse"></span></span>
                         </div>
@@ -1990,14 +2052,13 @@ service cloud.firestore {
         const caller = currentAgent ? currentAgent.displayName : (document.getElementById("callerName").value || "Agent");
         const customerName = document.getElementById("customerName").value.trim();
         const mood = document.getElementById("customerMood").value;
-        const note = document.getElementById("customNote").value;
-        const brochure = document.getElementById("brochureLink").value;
         
         if (!scripts[mood]) return "";
         let finalMessage = scripts[mood].replace("{caller_name}", caller);
         if (customerName) finalMessage = finalMessage.replace("નમસ્તે,", `નમસ્તે ${customerName},`);
-        finalMessage = finalMessage.replace("{custom_note}", note ? `📌 નોંધ: ${note}` : "").replace("{brochure_text}", brochure ? `📄 *વધુ માહિતી:* ${brochure}` : "");
-        return finalMessage.replace(/\n\n\n/g, "\n\n");
+        // First follow-up notes are strictly internal and never sent in WhatsApp messages
+        finalMessage = finalMessage.replace("{custom_note}", "").replace("{brochure_text}", "");
+        return finalMessage.replace(/\n\n\n+/g, "\n\n").trim();
     };
 
     window.checkDuplicateLive = () => {
@@ -2179,7 +2240,6 @@ service cloud.firestore {
         document.getElementById("customerNumber").value = "";
         document.getElementById("dummyCity").value = "";
         document.getElementById("dummyEdu").value = "";
-        document.getElementById("brochureLink").value = "";
         document.getElementById("customNote").value = "";
         document.getElementById("callerInternalNote").value = "";
         document.getElementById("followUpDate").value = "";
@@ -2224,8 +2284,19 @@ service cloud.firestore {
             if (!c.followUpType) {
                 c.followUpType = c.followup ? 'Call Reminder' : 'None';
             }
+            // Ensure Area box is separate and imported notes don't pollute First Follow Up Notes
+            if (c.areaInfo === undefined) {
+                c.areaInfo = c.city || '';
+            }
+            if (c.callCompletionState === 'pending' && c.source === 'Excel Import' && !c.firstCallerTypedNote) {
+                if (c.firstFollowupNotes && !c.areaInfo.includes(c.firstFollowupNotes)) {
+                    c.areaInfo = [c.city, c.firstFollowupNotes].filter(Boolean).join(' - ');
+                }
+                c.firstFollowupNotes = '';
+                c.internalNote = '';
+            }
             if (c.firstFollowupNotes === undefined) {
-                c.firstFollowupNotes = c.internalNote || '';
+                c.firstFollowupNotes = '';
             }
             if (c.secondFollowupStage === undefined) {
                 c.secondFollowupStage = (c.followUpType === 'Physical Meet' || c.followUpType === 'Demo Class') ? 'pending_second' : 'none';
@@ -2287,7 +2358,9 @@ service cloud.firestore {
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
         const firstNoteStr = document.getElementById("customNote").value.trim();
         const internalNotesStr = document.getElementById("callerInternalNote").value.trim();
-        const followUpdate = document.getElementById("followUpDate").value;
+        const rawFollowUpdate = document.getElementById("followUpDate").value.trim();
+        const validFollowUpDate = (rawFollowUpdate && !isNaN(new Date(rawFollowUpdate).getTime())) ? rawFollowUpdate : "";
+        const areaOrCity = document.getElementById("dummyCity").value.trim();
         const isFreshLead = moodValue === 'fresh_uncalled';
 
         const newCustomer = {
@@ -2298,16 +2371,18 @@ service cloud.firestore {
             course: isFreshLead ? "કોલ બાકી (Not Asked Yet)" : (courseLabelMap[moodValue] || moodValue),
             status: moodValue, 
             priority: priorityInput,
-            city: document.getElementById("dummyCity").value || "Mehsana",
-            edu: document.getElementById("dummyEdu").value || "",
+            city: areaOrCity || "",
+            areaInfo: areaOrCity || "",
+            edu: document.getElementById("dummyEdu").value.trim() || "",
             source: document.getElementById("leadSource").value,
-            firstFollowupNotes: firstNoteStr || internalNotesStr,
+            firstFollowupNotes: isFreshLead ? "" : (firstNoteStr || internalNotesStr),
+            firstCallerTypedNote: !isFreshLead && Boolean(firstNoteStr || internalNotesStr),
             secondFollowupNotes: "",
             finalFollowupNotes: "",
-            internalNote: firstNoteStr || internalNotesStr,
+            internalNote: isFreshLead ? "" : (firstNoteStr || internalNotesStr),
             tags: [],
-            followup: followUpdate,
-            followUpType: followUpdate ? 'Call Reminder' : 'None',
+            followup: validFollowUpDate,
+            followUpType: validFollowUpDate ? 'Call Reminder' : 'None',
             callCompletionState: isFreshLead ? 'pending' : 'completed',
             pendingSubTag: isFreshLead ? 'Fresh / Not Dialed' : '',
             secondFollowupStage: 'none',
@@ -2322,7 +2397,7 @@ service cloud.firestore {
         };
 
         extendedCRM.customers.unshift(newCustomer);
-        logActivity(cid, 'create', `લીડ બની [${leadIdStr}]`, `STD: ${newCustomer.edu || '-'} | નોંધ: ${newCustomer.firstFollowupNotes || '-'}`, agentNameStr);
+        logActivity(cid, 'create', `લીડ બની [${leadIdStr}]`, `STD: ${newCustomer.edu || '-'} | એરિયા: ${newCustomer.areaInfo || '-'}`, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
         saveCustomerToCloud(newCustomer);
         
@@ -2352,8 +2427,8 @@ service cloud.firestore {
 
     window.downloadExcelSampleTemplate = () => {
         const sampleData = [
-            { "CUSTOMER NAME": "Aarav Patel", "MO NO": "9876543210", "STD": "12th Commerce", "CITY": "Mehsana", "FIRST FOLLOW UP NOTES": "Fresh Inquiry" },
-            { "CUSTOMER NAME": "Priya Thakor", "MO NO": "9123456789", "STD": "B.Com Sem 4", "CITY": "Visnagar", "FIRST FOLLOW UP NOTES": "Seminar List" }
+            { "CUSTOMER NAME": "Aarav Patel", "MO NO": "9876543210", "STD": "12th Commerce", "AREA": "Modhera Road, Mehsana" },
+            { "CUSTOMER NAME": "Priya Thakor", "MO NO": "9123456789", "STD": "B.Com Sem 4", "AREA": "Radhanpur Road, Mehsana" }
         ];
         const ws = XLSX.utils.json_to_sheet(sampleData);
         const wb = XLSX.utils.book_new();
@@ -2380,12 +2455,19 @@ service cloud.firestore {
                     Object.keys(row).forEach(k => norm[k.trim().toLowerCase()] = String(row[k]).trim());
                     const rawPhone = norm['mo no'] || norm['phone'] || norm['mobile'] || norm['number'] || norm['contact'] || norm['મોબાઈલ'] || '';
                     const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+                    // Put any imported area/city/notes into the separate Area box so First Follow Up Notes stays blank
+                    const areaParts = [
+                        norm['area'] || norm['એરિયા'] || norm['વિસ્તાર'] || '',
+                        norm['city'] || norm['location'] || norm['ગામ'] || '',
+                        norm['first follow up notes'] || norm['notes'] || norm['remark'] || ''
+                    ].filter(Boolean);
+                    const combinedArea = [...new Set(areaParts)].join(' - ');
+
                     return {
                         name: norm['customer name'] || norm['name'] || norm['student name'] || norm['નામ'] || 'Student Lead',
                         phone: cleanPhone,
                         std: norm['std'] || norm['education'] || norm['standard'] || norm['ધોરણ'] || '',
-                        city: norm['city'] || norm['location'] || 'Mehsana',
-                        notes: norm['first follow up notes'] || norm['notes'] || norm['remark'] || ''
+                        area: combinedArea
                     };
                 }).filter(r => r.phone.length === 10);
 
@@ -2396,6 +2478,7 @@ service cloud.firestore {
                         <td class="p-2 font-semibold text-slate-800 dark:text-slate-200">${r.name}</td>
                         <td class="p-2 font-mono text-brand-600">${r.phone}</td>
                         <td class="p-2 text-slate-500">${r.std || '-'}</td>
+                        <td class="p-2 text-blue-600 font-semibold">${r.area || '-'}</td>
                     </tr>
                 `).join('');
                 document.getElementById('excelPreviewContainer').classList.remove('hidden');
@@ -2429,15 +2512,17 @@ service cloud.firestore {
                 course: "કોલ બાકી (Not Asked Yet)",
                 status: 'fresh_uncalled',
                 priority: 'Medium',
-                city: row.city || 'Mehsana',
+                city: row.area || '',
+                areaInfo: row.area || '',
                 edu: row.std || '',
                 source: 'Excel Import',
-                firstFollowupNotes: row.notes || '',
+                firstFollowupNotes: '', // Strictly blank for first caller
+                firstCallerTypedNote: false,
                 secondFollowupNotes: '',
                 finalFollowupNotes: '',
-                internalNote: row.notes || '',
+                internalNote: '', // Strictly blank for first caller
                 tags: ['Excel Import'],
-                followup: '',
+                followup: '', // Strictly blank until caller selects a valid date/time
                 followUpType: 'None',
                 callCompletionState: 'pending',
                 pendingSubTag: 'Fresh / Not Dialed',
@@ -2451,7 +2536,7 @@ service cloud.firestore {
 
             extendedCRM.customers.unshift(newCust);
             newlyImportedLeads.push(newCust);
-            logActivity(cid, 'create', `એક્સેલ ઈમ્પોર્ટ [${leadIdStr}]`, `ફ્રેશ કોલિંગ લીડ`, agentNameStr);
+            logActivity(cid, 'create', `એક્સેલ ઈમ્પોર્ટ [${leadIdStr}]`, `એરિયા: ${newCust.areaInfo || '-'}`, agentNameStr);
             syncCustomerRowToGoogleSheet(newCust, 'EXCEL_IMPORT');
             importedCount++;
         }
@@ -2486,10 +2571,19 @@ service cloud.firestore {
         document.getElementById('postCallCustomerName').innerText = customer.name;
         document.getElementById('postCallCustomerPhone').innerText = `+91 ${customer.phone}`;
         document.getElementById('postCallStdInput').value = customer.edu || '';
+        document.getElementById('postCallAreaInput').value = customer.areaInfo || customer.city || '';
         document.getElementById('postCallStatus').value = (customer.status && customer.status !== 'fresh_uncalled') ? customer.status : 'interested_ai';
-        document.getElementById('postCallFollowupDate').value = customer.followup || '';
-        document.getElementById('postCallNotes').value = customer.firstFollowupNotes || '';
-        document.getElementById('postCallBrochure').value = '';
+        
+        // Keep date blank unless a valid full date-time was already properly set
+        const followDateEl = document.getElementById('postCallFollowupDate');
+        if (customer.followup && customer.followup.includes('T') && !isNaN(new Date(customer.followup).getTime())) {
+            followDateEl.value = customer.followup;
+        } else {
+            followDateEl.value = '';
+        }
+
+        // First Follow Up Notes box is strictly blank if caller hasn't typed a first follow-up note yet
+        document.getElementById('postCallNotes').value = customer.firstCallerTypedNote ? (customer.firstFollowupNotes || '') : '';
 
         const completedRadio = document.querySelector('input[name="postCallCompletion"][value="completed"]');
         if (completedRadio) completedRadio.checked = true;
@@ -2521,20 +2615,12 @@ service cloud.firestore {
         updatePostCallWaPreview();
     };
 
-    window.appendPostCallOffer = (offerText) => {
-        const noteEl = document.getElementById('postCallNotes');
-        noteEl.value = noteEl.value ? `${noteEl.value} | ${offerText}` : offerText;
-        updatePostCallWaPreview();
-    };
-
     window.buildPostCallWhatsAppMessage = () => {
         const leadId = document.getElementById('postCallLeadId').value;
         const customer = extendedCRM.customers.find(c => c.id === leadId);
         const caller = currentAgent ? currentAgent.displayName : "Agent";
         const completionState = document.querySelector('input[name="postCallCompletion"]:checked')?.value || 'completed';
         const selectedMood = document.getElementById('postCallStatus').value;
-        const notes = document.getElementById('postCallNotes').value.trim();
-        const brochure = document.getElementById('postCallBrochure').value.trim();
 
         let templateKey = selectedMood;
         if (completionState === 'pending') {
@@ -2551,9 +2637,10 @@ service cloud.firestore {
         if (customer && customer.name && customer.name !== 'Student Lead') {
             msg = msg.replace("નમસ્તે,", `નમસ્તે ${customer.name},`);
         }
-        msg = msg.replace("{custom_note}", notes ? `📌 નોંધ: ${notes}` : "")
-                 .replace("{brochure_text}", brochure ? `📄 *બ્રોશર લિંક:* ${brochure}` : "");
-        return msg.replace(/\n\n\n/g, "\n\n").trim();
+        // Strictly exclude internal firstFollowupNotes from WhatsApp message
+        msg = msg.replace("{custom_note}", "")
+                 .replace("{brochure_text}", "");
+        return msg.replace(/\n\n\n+/g, "\n\n").trim();
     };
 
     window.updatePostCallWaPreview = () => {
@@ -2573,15 +2660,22 @@ service cloud.firestore {
         const actionType = document.querySelector('input[name="postCallActionType"]:checked')?.value || 'None';
         const newStatus = document.getElementById('postCallStatus').value;
         const stdVal = document.getElementById('postCallStdInput').value.trim();
-        const followupDate = document.getElementById('postCallFollowupDate').value;
+        const areaVal = document.getElementById('postCallAreaInput').value.trim();
+        const rawFollowupDate = document.getElementById('postCallFollowupDate').value.trim();
         const notes = document.getElementById('postCallNotes').value.trim();
         const waMsg = window.buildPostCallWhatsAppMessage();
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
 
+        // Validate Date & Time: if caller didn't fill it properly, keep it completely blank
+        const isValidDateTime = rawFollowupDate !== '' && rawFollowupDate.includes('T') && !isNaN(new Date(rawFollowupDate).getTime());
+        customer.followup = isValidDateTime ? rawFollowupDate : '';
+
         customer.callCompletionState = completionState;
         customer.pendingSubTag = completionState === 'pending' ? pendingSubTag : 'Completed';
         customer.followUpType = actionType;
-        if (stdVal) customer.edu = stdVal;
+        if (stdVal !== undefined) customer.edu = stdVal;
+        customer.areaInfo = areaVal;
+        customer.city = areaVal;
 
         if (completionState === 'pending') {
             if (pendingSubTag === 'Busy Right Now') customer.status = 'busy';
@@ -2590,7 +2684,7 @@ service cloud.firestore {
             else if (pendingSubTag === 'Wrong Number') customer.status = 'wrong_number';
         } else {
             customer.status = newStatus;
-            customer.initialInterestedStatus = newStatus; // Preserve 1st caller's course interest for 2nd & 3rd follow-up filters
+            customer.initialInterestedStatus = newStatus;
             customer.course = courseLabelMap[newStatus] || customer.course;
         }
 
@@ -2601,15 +2695,16 @@ service cloud.firestore {
             }
         }
 
-        if (followupDate) customer.followup = followupDate;
-        if (notes) {
-            customer.firstFollowupNotes = notes;
-            customer.internalNote = notes;
-        }
-        customer.updated = new Date().toISOString();
-        customer.lastContact = new Date().toISOString();
+        const nowIso = new Date().toISOString();
+        customer.firstFollowupNotes = notes;
+        customer.internalNote = notes;
+        customer.firstCallerTypedNote = Boolean(notes);
+        customer.firstCallerName = agentNameStr;
+        customer.firstCallerAt = nowIso;
+        customer.updated = nowIso;
+        customer.lastContact = nowIso;
 
-        logActivity(customer.id, 'call', `૧. પહેલું ફોલો-અપ (${completionState === 'completed' ? 'પૂર્ણ' : 'બાકી'})`, `કોર્સ: ${customer.course} | આગળનું પગલું: ${actionType} | નોંધ: ${notes || '-'}`, agentNameStr);
+        logActivity(customer.id, 'call', `૧. પહેલું ફોલો-અપ (${completionState === 'completed' ? 'પૂર્ણ' : 'બાકી'})`, `કોર્સ: ${customer.course} | એરિયા: ${customer.areaInfo || '-'} | મિટિંગ સમય: ${customer.followup ? new Date(customer.followup).toLocaleString() : 'ખાલી'} | નોંધ: ${notes || '-'}`, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
         saveCustomerToCloud(customer);
 
@@ -2617,10 +2712,10 @@ service cloud.firestore {
         renderCustomersList();
         renderFollowupsList();
         renderSecondFollowupView();
+        renderFinalFollowupView();
         updateDashboardStats();
         if (currentProfileId === customer.id) openCustomerProfile(customer.id);
 
-        // STRICT FIX: Only open WhatsApp if caller explicitly clicked the "સેવ કરો & વોટ્સએપ મોકલો" button
         if (triggerWhatsApp === true) {
             if (waMsg) {
                 window.open(`https://wa.me/91${customer.phone}?text=${encodeURIComponent(waMsg)}`, '_blank');
@@ -2650,6 +2745,7 @@ service cloud.firestore {
 
         const waMsg = window.buildFinalGujaratiFeeWhatsAppMsg();
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
+        const nowIso = new Date().toISOString();
 
         c.course = course || c.course;
         c.edu = std || c.edu;
@@ -2657,8 +2753,10 @@ service cloud.firestore {
         c.advanceFee = advFee;
         c.status = 'admission';
         c.finalFollowupNotes = `કુલ ફી: ₹${totalFee} | જમા એડવાન્સ: ₹${advFee} | બાકી ફી: ₹${remFee} | નોંધ: ${finalNotes}`;
-        c.updated = new Date().toISOString();
-        c.lastContact = new Date().toISOString();
+        c.finalCallerName = agentNameStr;
+        c.finalCallerAt = nowIso;
+        c.updated = nowIso;
+        c.lastContact = nowIso;
 
         logActivity(c.id, 'whatsapp', `૩. ફાઇનલ ફોલો-અપ પૂર્ણ ${sendWhatsApp ? '& ફી મેસેજ મોકલ્યો' : '(ફક્ત સેવ)'}`, c.finalFollowupNotes, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
@@ -2764,8 +2862,12 @@ service cloud.firestore {
                     </div>
                     <div class="text-xs sm:text-sm space-y-1.5 text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
                         <div><b>૧. સિલેક્ટ કરેલ કોર્સ:</b> <span class="text-brand-600 font-extrabold">${c.course}</span></div>
-                        ${c.followup ? `<div><b>⏰ મિટિંગ સમય:</b> ${new Date(c.followup).toLocaleString()}</div>` : ''}
-                        <div><b>📝 પહેલી નોંધ:</b> ${c.firstFollowupNotes || '-'}</div>
+                        ${(c.areaInfo || c.city) ? `<div><b>📍 એરિયા (AREA):</b> <span class="text-blue-600 dark:text-blue-400 font-bold">${c.areaInfo || c.city}</span></div>` : ''}
+                        <div><b>⏰ મિટિંગ સમય:</b> ${c.followup ? new Date(c.followup).toLocaleString() : '<span class="text-slate-400">સમય સિલેક્ટ કરેલ નથી</span>'}</div>
+                        <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70 text-slate-800 dark:text-slate-100">
+                            <span class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 block">📝 ૧. પહેલા ફોલો-અપની નોંધ (First Caller Note):</span>
+                            <span class="font-bold whitespace-pre-wrap">${c.firstFollowupNotes || '-'}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -2786,6 +2888,10 @@ service cloud.firestore {
         document.getElementById('secModalLeadId').value = c.id;
         document.getElementById('secModalCustomerName').innerText = c.name;
         document.getElementById('secModalCustomerPhone').innerText = `+91 ${c.phone}`;
+        const areaDisplay = document.getElementById('secModalAreaDisplay');
+        if (areaDisplay) areaDisplay.innerText = c.areaInfo || c.city || '-';
+        const firstNoteDisplay = document.getElementById('secModalFirstNotesDisplay');
+        if (firstNoteDisplay) firstNoteDisplay.innerText = c.firstFollowupNotes || 'કોઈ નોંધ લખેલ નથી';
         document.getElementById('secFinalCourse').value = (c.course && !c.course.includes('બાકી')) ? c.course : 'AI Mastery Program';
         document.getElementById('secFixedFeeAmount').value = c.fixedFee || '';
         document.getElementById('secAdvanceFeeStatus').value = c.advanceFeeStatus || 'એડવાન્સ ફી આપેલ છે';
@@ -2821,6 +2927,7 @@ service cloud.firestore {
         }
 
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
+        const nowIso = new Date().toISOString();
         const formattedSecondNotes = `${visitStatus} | પ્રતિભાવ: ${custResponse} | ફિક્સ ફી: ₹${fixedFee} | ${advanceStatus} (જમા: ₹${advancePaid}) | નોંધ: ${closingNotes}`;
 
         c.secondFollowupStage = 'closed_to_final';
@@ -2829,6 +2936,8 @@ service cloud.firestore {
         c.advanceFeeStatus = advanceStatus;
         c.advanceFee = advancePaid;
         c.secondFollowupNotes = formattedSecondNotes;
+        c.secondCallerName = agentNameStr;
+        c.secondCallerAt = nowIso;
 
         if (custResponse.includes('એડમિશન કન્ફર્મ')) c.status = 'admission';
         else if (custResponse.includes('રસ નથી')) c.status = 'lost';
@@ -2842,10 +2951,10 @@ service cloud.firestore {
             advanceAmount: advancePaid,
             closingNotes,
             closedBy: agentNameStr,
-            closedAt: new Date().toISOString()
+            closedAt: nowIso
         };
-        c.updated = new Date().toISOString();
-        c.lastContact = new Date().toISOString();
+        c.updated = nowIso;
+        c.lastContact = nowIso;
 
         logActivity(c.id, 'note', `૨. બીજું ફોલો-અપ પૂર્ણ ➔ ફાઇનલમાં ટ્રાન્સફર`, formattedSecondNotes, agentNameStr);
         localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
@@ -2919,6 +3028,8 @@ service cloud.firestore {
         lockOverlay.classList.add('hidden');
         unlockedBox.classList.remove('hidden');
 
+        renderFinalCallerStatisticsAndChart();
+
         const finalLeads = allFinalLeads.filter(c => matchesCourseCategory(c, activeFinalCourseFilter));
 
         if (finalLeads.length === 0) {
@@ -2929,10 +3040,19 @@ service cloud.firestore {
             return;
         }
 
+        const formatDt = (iso) => {
+            if (!iso) return 'સમય નોંધાયેલ નથી';
+            const d = new Date(iso);
+            return isNaN(d.getTime()) ? '-' : d.toLocaleString('gu-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        };
+
         grid.innerHTML = finalLeads.map(c => {
             const totalFee = Number(c.fixedFee || 0);
             const advFee = Number(c.advanceFee || 0);
             const remFee = Math.max(0, totalFee - advFee);
+            const firstDt = formatDt(c.firstCallerAt || c.created);
+            const secondDt = formatDt(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt));
+            const finalDt = c.finalCallerAt ? formatDt(c.finalCallerAt) : null;
 
             return `
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border-2 border-emerald-200 dark:border-emerald-800/70 p-4 flex flex-col justify-between hover:shadow-md transition">
@@ -2955,8 +3075,33 @@ service cloud.firestore {
                             <div class="bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-lg text-center border border-emerald-200">એડવાન્સ<br><b class="text-sm text-emerald-600">₹${advFee}</b></div>
                             <div class="bg-red-50 dark:bg-red-950/40 p-2 rounded-lg text-center border border-red-200">બાકી ફી<br><b class="text-sm text-red-600">₹${remFee}</b></div>
                         </div>
-                        <div class="pt-1 text-xs"><b>૨. બીજું ફોલો-અપ:</b> ${c.secondFollowupNotes || '-'}</div>
-                        ${c.finalFollowupNotes ? `<div class="text-xs font-bold text-emerald-700 dark:text-emerald-400"><b>૩. ફાઇનલ નોંધ:</b> ${c.finalFollowupNotes}</div>` : ''}
+
+                        <!-- 1st Caller Info + Exact Date & Time -->
+                        <div class="p-2 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70 text-xs">
+                            <div class="flex justify-between items-center text-[11px] font-extrabold text-blue-700 dark:text-blue-400 mb-0.5">
+                                <span>📞 ૧. પહેલો કોલર ક્લોઝ (${c.firstCallerName || c.assignedAgent || 'Caller 1'})</span>
+                                <span>🕒 ${firstDt}</span>
+                            </div>
+                            <span class="font-bold text-slate-800 dark:text-slate-100 whitespace-pre-wrap">${c.firstFollowupNotes || c.internalNote || '-'}</span>
+                        </div>
+
+                        <!-- 2nd Caller Private Info + Exact Date & Time (Shown Only in Final Review) -->
+                        <div class="p-2 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/70 text-xs">
+                            <div class="flex justify-between items-center text-[11px] font-extrabold text-amber-800 dark:text-amber-400 mb-0.5">
+                                <span>🔒 ૨. બીજો કોલર ક્લોઝ (${c.secondCallerName || (c.secondFollowupData && c.secondFollowupData.closedBy) || 'Caller 2'})</span>
+                                <span>🕒 ${secondDt}</span>
+                            </div>
+                            <span class="font-bold text-slate-800 dark:text-slate-100 whitespace-pre-wrap">${c.secondFollowupNotes || '-'}</span>
+                        </div>
+
+                        ${c.finalFollowupNotes ? `
+                        <div class="p-2 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/70 text-xs">
+                            <div class="flex justify-between items-center text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 mb-0.5">
+                                <span>✅ ૩. ફાઇનલ ક્લોઝ (${c.finalCallerName || 'Final Caller'})</span>
+                                <span>🕒 ${finalDt || '-'}</span>
+                            </div>
+                            <span class="font-bold text-emerald-900 dark:text-emerald-200 whitespace-pre-wrap">${c.finalFollowupNotes}</span>
+                        </div>` : ''}
                     </div>
                 </div>
 
@@ -2972,12 +3117,154 @@ service cloud.firestore {
         }).join('');
     };
 
+    window.toggleFinalAnalyticsPanel = () => {
+        const panel = document.getElementById('finalCallerAnalyticsPanel');
+        if (panel) panel.classList.toggle('hidden');
+    };
+
+    const getDateKey = (dateInput) => {
+        if (!dateInput) return null;
+        const d = new Date(dateInput);
+        if (isNaN(d.getTime())) return null;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    const renderFinalCallerStatisticsAndChart = () => {
+        const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
+        const todayKey = getDateKey(new Date());
+
+        const firstCompletedAll = activeCustomers.filter(c => c.callCompletionState === 'completed');
+        const firstCompletedToday = firstCompletedAll.filter(c => getDateKey(c.firstCallerAt || c.updated) === todayKey);
+
+        const secondClosedAll = activeCustomers.filter(c => c.secondFollowupStage === 'closed_to_final');
+        const secondClosedToday = secondClosedAll.filter(c => getDateKey(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated) === todayKey);
+
+        const finalClosedAll = activeCustomers.filter(c => c.finalFollowupNotes && c.finalFollowupNotes.trim() !== '');
+        const finalClosedToday = finalClosedAll.filter(c => getDateKey(c.finalCallerAt || c.updated) === todayKey);
+
+        let totalLogs = 0;
+        Object.values(extendedCRM.timeline || {}).forEach(arr => { totalLogs += (arr ? arr.length : 0); });
+
+        const elF1 = document.getElementById('finStatFirstCaller');
+        if (elF1) elF1.innerText = `${firstCompletedToday.length} / ${firstCompletedAll.length}`;
+        const elF2 = document.getElementById('finStatSecondCaller');
+        if (elF2) elF2.innerText = `${secondClosedToday.length} / ${secondClosedAll.length}`;
+        const elF3 = document.getElementById('finStatFinalCaller');
+        if (elF3) elF3.innerText = `${finalClosedToday.length} / ${finalClosedAll.length}`;
+        const elLogs = document.getElementById('finStatTotalLogs');
+        if (elLogs) elLogs.innerText = totalLogs;
+
+        // Build Last 7 Days Daily Chart
+        const chartBox = document.getElementById('finalDailyChartContainer');
+        if (!chartBox) return;
+
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const key = getDateKey(d);
+            const label = d.toLocaleDateString('gu-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+
+            const c1 = firstCompletedAll.filter(c => getDateKey(c.firstCallerAt || c.updated) === key).length;
+            const c2 = secondClosedAll.filter(c => getDateKey(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated) === key).length;
+            const c3 = finalClosedAll.filter(c => getDateKey(c.finalCallerAt || c.updated) === key).length;
+            days.push({ key, label, c1, c2, c3 });
+        }
+
+        const maxVal = Math.max(5, ...days.map(d => Math.max(d.c1, d.c2, d.c3)));
+
+        chartBox.innerHTML = days.map(d => {
+            const h1 = Math.round((d.c1 / maxVal) * 100);
+            const h2 = Math.round((d.c2 / maxVal) * 100);
+            const h3 = Math.round((d.c3 / maxVal) * 100);
+            return `
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                <div class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 text-center mb-2">${d.label}</div>
+                <div class="h-24 flex items-end justify-center gap-2 px-2 border-b border-slate-200 dark:border-slate-700 pb-1">
+                    <div class="flex flex-col items-center flex-1 h-full justify-end">
+                        <span class="text-[10px] font-extrabold text-blue-600 mb-0.5">${d.c1}</span>
+                        <div class="w-full bg-blue-500 rounded-t-md transition-all" style="height: ${Math.max(8, h1)}%" title="1st Caller: ${d.c1}"></div>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 h-full justify-end">
+                        <span class="text-[10px] font-extrabold text-amber-600 mb-0.5">${d.c2}</span>
+                        <div class="w-full bg-amber-500 rounded-t-md transition-all" style="height: ${Math.max(8, h2)}%" title="2nd Caller Close: ${d.c2}"></div>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 h-full justify-end">
+                        <span class="text-[10px] font-extrabold text-emerald-600 mb-0.5">${d.c3}</span>
+                        <div class="w-full bg-emerald-500 rounded-t-md transition-all" style="height: ${Math.max(8, h3)}%" title="Final Close: ${d.c3}"></div>
+                    </div>
+                </div>
+                <div class="mt-1.5 text-[10px] text-center font-bold text-slate-400">1st: ${d.c1} | 2nd: ${d.c2} | Fin: ${d.c3}</div>
+            </div>`;
+        }).join('');
+    };
+
+    // Final Caller Activity & Daily Statistics Excel Download
+    window.downloadFinalCallerActivityExcel = () => {
+        if (!isFinalFollowupUnlocked) {
+            return showAlert("કૃપા કરીને પહેલા ૩. ફાઇનલ ફોલો-અપ અનલોક કરો.");
+        }
+
+        const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
+        const fmtDt = (iso) => iso ? new Date(iso).toLocaleString() : '-';
+
+        // Sheet 1: Complete Lead Wise Caller & Closing Timestamps
+        const leadActivityRows = activeCustomers.map(c => ({
+            "LEAD ID": c.leadId || '',
+            "CUSTOMER NAME": c.name || '',
+            "MO NO": c.phone || '',
+            "STD": c.edu || '',
+            "AREA": c.areaInfo || c.city || '',
+            "COURSE": c.course || '',
+            "1ST CALLER STATUS": c.callCompletionState === 'completed' ? 'COMPLETED' : `PENDING (${c.pendingSubTag || 'Fresh'})`,
+            "1ST CALLER NAME": c.firstCallerName || c.assignedAgent || '',
+            "1ST CALLER DATE & TIME": fmtDt(c.firstCallerAt || c.created),
+            "FIRST FOLLOW UP NOTES": c.firstFollowupNotes || '',
+            "2ND CALLER CLOSE STATUS (PRIVATE)": c.secondFollowupStage === 'closed_to_final' ? 'CLOSED TO FINAL' : (c.secondFollowupStage === 'pending_second' ? 'PENDING MEETING' : 'N/A'),
+            "2ND CALLER NAME": c.secondCallerName || (c.secondFollowupData && c.secondFollowupData.closedBy) || '',
+            "2ND CALLER CLOSE DATE & TIME": fmtDt(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt)),
+            "SECOND FOLLOW UP NOTES": c.secondFollowupNotes || '',
+            "FIXED FEE": c.fixedFee || '0',
+            "ADVANCE FEE": c.advanceFee || '0',
+            "FINAL CALLER NAME": c.finalCallerName || '',
+            "FINAL CLOSE DATE & TIME": fmtDt(c.finalCallerAt),
+            "FINAL FOLLOW UP NOTES": c.finalFollowupNotes || ''
+        }));
+
+        // Sheet 2: Daily Summary Statistics
+        const dateSet = new Set();
+        activeCustomers.forEach(c => {
+            if (getDateKey(c.firstCallerAt || c.created)) dateSet.add(getDateKey(c.firstCallerAt || c.created));
+            if (getDateKey(c.secondCallerAt)) dateSet.add(getDateKey(c.secondCallerAt));
+            if (getDateKey(c.finalCallerAt)) dateSet.add(getDateKey(c.finalCallerAt));
+        });
+        const sortedDates = Array.from(dateSet).sort().reverse();
+        const dailySummaryRows = sortedDates.map(dKey => ({
+            "DATE": dKey,
+            "1ST CALLER COMPLETED CALLS": activeCustomers.filter(c => c.callCompletionState === 'completed' && getDateKey(c.firstCallerAt || c.updated) === dKey).length,
+            "2ND CALLER MEETINGS CLOSED (PRIVATE)": activeCustomers.filter(c => c.secondFollowupStage === 'closed_to_final' && getDateKey(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated) === dKey).length,
+            "FINAL FOLLOW UP ADMISSIONS CLOSED": activeCustomers.filter(c => c.finalFollowupNotes && getDateKey(c.finalCallerAt || c.updated) === dKey).length
+        }));
+
+        const wb = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(leadActivityRows);
+        const ws2 = XLSX.utils.json_to_sheet(dailySummaryRows.length ? dailySummaryRows : [{ "DATE": getDateKey(new Date()), "1ST CALLER COMPLETED CALLS": 0, "2ND CALLER MEETINGS CLOSED (PRIVATE)": 0, "FINAL FOLLOW UP ADMISSIONS CLOSED": 0 }]);
+        XLSX.utils.book_append_sheet(wb, ws1, "Caller_Activity_Report");
+        XLSX.utils.book_append_sheet(wb, ws2, "Daily_Caller_Stats");
+        XLSX.writeFile(wb, `UVACRM_Final_Caller_Activity_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+        customToast("કોલર એક્ટિવિટી અને દૈનિક સ્ટેટિસ્ટિક્સ એક્સેલ ડાઉનલોડ થઈ ગઈ!");
+    };
+
     window.openFinalFollowupModal = (customerId) => {
         const c = extendedCRM.customers.find(x => x.id === customerId);
         if (!c) return;
         document.getElementById('finalModalLeadId').value = c.id;
         document.getElementById('finalModalCustomerName').innerText = c.name;
         document.getElementById('finalModalCustomerPhone').innerText = `+91 ${c.phone}`;
+        const f1El = document.getElementById('finalModalFirstNotesDisplay');
+        if (f1El) f1El.innerText = c.firstFollowupNotes || c.internalNote || '-';
+        const f2El = document.getElementById('finalModalSecondNotesDisplay');
+        if (f2El) f2El.innerText = c.secondFollowupNotes || '-';
         document.getElementById('finalCourseInput').value = c.course || '';
         document.getElementById('finalStdInput').value = c.edu || '';
         document.getElementById('finalTotalFeeInput').value = c.fixedFee || 0;
@@ -3061,17 +3348,15 @@ service cloud.firestore {
         customToast("ફાઇનલ ફોલો-અપ સેવ થઈ ગયું & વોટ્સએપ મેસેજ ખુલ્યો!");
     };
 
-    // SHEET DOWNLOAD PASSWORD MODAL (UVA5555)
     window.openSheetPasswordModal = () => {
-        const modal = document.getElementById('sheetPasswordModal');
         const input = document.getElementById('sheetDownloadPwdInput');
         const err = document.getElementById('sheetDownloadPwdError');
         if (input) input.value = '';
         if (err) err.classList.add('hidden');
+        const modal = document.getElementById('sheetPasswordModal');
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            setTimeout(() => input && input.focus(), 100);
         }
     };
 
@@ -3083,37 +3368,61 @@ service cloud.firestore {
         }
     };
 
-    window.verifySheetDownloadPassword = () => {
+    window.verifySheetDownloadPassword = (downloadMode = 'closed') => {
         const input = document.getElementById('sheetDownloadPwdInput').value.trim();
         const err = document.getElementById('sheetDownloadPwdError');
         if (input === SHEET_EXPORT_SECRET) {
             closeSheetPasswordModal();
-            executeGoogleSheet7ColumnDownload();
+            executeGoogleSheet7ColumnDownload(downloadMode);
         } else {
             if (err) err.classList.remove('hidden');
         }
     };
 
-    const executeGoogleSheet7ColumnDownload = () => {
-        const rows = extendedCRM.customers.filter(c => !c.isDeleted).map(c => ({
+    const executeGoogleSheet7ColumnDownload = (downloadMode = 'closed') => {
+        const allActive = extendedCRM.customers.filter(c => !c.isDeleted);
+        let targetList = [];
+
+        if (downloadMode === 'closed') {
+            // Only leads that have actually completed and closed all follow-up parts
+            targetList = allActive.filter(c => 
+                c.secondFollowupStage === 'closed_to_final' && 
+                c.finalFollowupNotes && 
+                c.finalFollowupNotes.trim() !== ''
+            );
+        } else {
+            // Pending Data: leads that are pending calls or still in 1st/2nd follow-up (not yet final closed)
+            targetList = allActive.filter(c => 
+                !(c.secondFollowupStage === 'closed_to_final' && c.finalFollowupNotes && c.finalFollowupNotes.trim() !== '')
+            );
+        }
+
+        if (targetList.length === 0) {
+            return showAlert(downloadMode === 'closed' 
+                ? "તમામ સ્ટેજ પૂર્ણ થયા હોય (Closed All Parts) તેવો કોઈ ડેટા હજુ ઉપલબ્ધ નથી." 
+                : "ડાઉનલોડ કરવા માટે કોઈ પેન્ડિંગ ડેટા નથી.");
+        }
+
+        const rows = targetList.map(c => ({
             "CUSTOMER NAME": c.name || '',
             "INTERESTED OR NOT": getInterestedOrNotText(c.status),
             "MO NO": c.phone || '',
             "STD": c.edu || '',
-            "FIRST FOLLOW UP NOTES": c.firstFollowupNotes || c.internalNote || '',
+            "AREA": c.areaInfo || c.city || '',
+            "FIRST FOLLOW UP NOTES": c.firstFollowupNotes || '',
             "SECOND FOLLOW UP NOTES": c.secondFollowupNotes || '',
             "FINAL FOLLOW UP NOTES": c.finalFollowupNotes || ''
         }));
 
-        if (rows.length === 0) {
-            return showAlert("ડાઉનલોડ કરવા માટે કોઈ ડેટા નથી.");
-        }
-
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "UVACRM_Sheet");
-        XLSX.writeFile(wb, `UVACRM_Sheet_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
-        customToast("7-કોલમ એક્સેલ શીટ ડાઉનલોડ થઈ ગઈ!");
+        const sheetName = downloadMode === 'closed' ? "Closed_Leads" : "Pending_Leads";
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        const filePrefix = downloadMode === 'closed' ? "UVACRM_Closed_Final_Sheet" : "UVACRM_Pending_Data_Sheet";
+        XLSX.writeFile(wb, `${filePrefix}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+        customToast(downloadMode === 'closed' 
+            ? `${rows.length} ફાઇનલ ક્લોઝ્ડ લીડ્સની શીટ ડાઉનલોડ થઈ ગઈ!` 
+            : `${rows.length} પેન્ડિંગ લીડ્સની શીટ ડાઉનલોડ થઈ ગઈ!`);
     };
 
     const isOverdue = (dateStr) => {
@@ -3153,6 +3462,43 @@ service cloud.firestore {
 
         const sbFollowup = document.getElementById('sidebarFollowupBadge');
         if (sbFollowup) sbFollowup.innerText = activeCustomers.filter(c => (c.followUpType && c.followUpType !== 'None') || c.followup).length;
+
+        // Render 1st Caller Daily Report on Main Dashboard (Strictly 1st Caller only - 2nd Caller is kept private)
+        const todayKey = getDateKey(new Date());
+        const firstCallerCompleted = activeCustomers.filter(c => c.callCompletionState === 'completed');
+        const firstCallerToday = firstCallerCompleted.filter(c => getDateKey(c.firstCallerAt || c.updated) === todayKey);
+
+        const dashTodayEl = document.getElementById('dashFirstCallerTodayCount');
+        if (dashTodayEl) dashTodayEl.innerText = firstCallerToday.length;
+        const dashTotalEl = document.getElementById('dashFirstCallerTotalCount');
+        if (dashTotalEl) dashTotalEl.innerText = firstCallerCompleted.length;
+
+        const dashBarsEl = document.getElementById('dashFirstCallerDailyBars');
+        if (dashBarsEl) {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = getDateKey(d);
+                const label = d.toLocaleDateString('gu-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+                const completedCount = firstCallerCompleted.filter(c => getDateKey(c.firstCallerAt || c.updated) === key).length;
+                const latestCall = firstCallerCompleted
+                    .filter(c => getDateKey(c.firstCallerAt || c.updated) === key)
+                    .sort((a, b) => new Date(b.firstCallerAt || b.updated) - new Date(a.firstCallerAt || a.updated))[0];
+                const lastTimeStr = latestCall ? new Date(latestCall.firstCallerAt || latestCall.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                days.push({ label, completedCount, lastTimeStr });
+            }
+            dashBarsEl.innerHTML = days.map(d => `
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                    <span class="text-[11px] font-bold text-slate-500">${d.label}</span>
+                    <div class="my-1.5 flex items-baseline justify-between">
+                        <span class="text-xl font-extrabold text-brand-600 dark:text-brand-400">${d.completedCount}</span>
+                        <span class="text-[10px] font-bold text-slate-400">કોલ્સ પૂર્ણ</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 font-medium truncate">🕒 છેલ્લો કોલ: ${d.lastTimeStr}</div>
+                </div>
+            `).join('');
+        }
     };
 
     window.openPendingCallsFromDash = () => {
@@ -3246,6 +3592,7 @@ service cloud.firestore {
                     <div class="flex flex-wrap gap-1.5 mb-2.5">
                         ${callBadge}
                         <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-slate-200">🎓 ${c.course}</span>
+                        ${(c.areaInfo || c.city) ? `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">📍 ${c.areaInfo || c.city}</span>` : ''}
                     </div>
                     ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl mb-3 line-clamp-2">📝 ${c.firstFollowupNotes}</p>` : ''}
                 </div>
@@ -3320,7 +3667,9 @@ service cloud.firestore {
                         <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
                     </div>
                     <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug">${c.name}</h3>
-                    <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5 mb-2.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                    <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5 mb-2">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                    ${(c.areaInfo || c.city) ? `<div class="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1.5">📍 એરિયા: ${c.areaInfo || c.city}</div>` : ''}
+                    ${c.followup ? `<div class="text-xs font-bold text-purple-600 dark:text-purple-400 mb-2">⏰ સમય: ${new Date(c.followup).toLocaleString()}</div>` : ''}
                     ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl mb-3">📝 ${c.firstFollowupNotes}</p>` : ''}
                 </div>
                 <div class="flex gap-2">
@@ -3356,9 +3705,11 @@ service cloud.firestore {
         document.getElementById("profName").innerText = customer.name;
         document.getElementById("profLeadId").innerText = customer.leadId || "UVA";
         document.getElementById("profPhone").innerText = customer.phone;
+        const areaEl = document.getElementById("profArea");
+        if (areaEl) areaEl.innerText = customer.areaInfo || customer.city || "-";
         document.getElementById("profEdu").innerText = customer.edu || "-";
         document.getElementById("profCourse").innerText = customer.course;
-        document.getElementById("profFirstNotes").innerText = customer.firstFollowupNotes || customer.internalNote || "-";
+        document.getElementById("profFirstNotes").innerText = customer.firstFollowupNotes || "-";
         document.getElementById("profSecondNotes").innerText = customer.secondFollowupNotes || "-";
         document.getElementById("profFinalNotes").innerText = customer.finalFollowupNotes || "-";
 
