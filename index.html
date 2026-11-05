@@ -17,20 +17,20 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- SheetJS for Excel/CSV Import & Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Gujarati:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['"Noto Sans Gujarati"', 'Inter', 'sans-serif'] },
                     colors: {
-                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 900: '#14532d' },
-                        crm: { 50: '#f8fafc', 800: '#1e293b', 900: '#0f172a' }
+                        brand: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 900: '#064e3b' },
+                        crm: { 50: '#f1f5f9', 800: '#1e293b', 900: '#0b1120' }
                     },
                     boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-                        'glow': '0 0 15px rgba(34, 197, 94, 0.3)'
+                        'soft': '0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.04)',
+                        'glow': '0 8px 25px -4px rgba(16, 185, 129, 0.45)'
                     }
                 }
             }
@@ -38,10 +38,16 @@
     </script>
     <style>
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Noto Sans Gujarati', 'Inter', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
+                              radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.07) 0px, transparent 50%);
+        }
+        .dark body {
+            background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+                              radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
         }
         .whatsapp-bg { 
             background-color: #e5ddd5; 
@@ -60,27 +66,35 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); }
-        .dark .glass { background: rgba(15, 23, 42, 0.85); }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(16px); }
+        .dark .glass { background: rgba(15, 23, 42, 0.9); }
+
+        .crm-card {
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .crm-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.12);
+        }
 
         .input-group { position: relative; }
         .input-group input, .input-group select, .input-group textarea {
-            width: 100%; padding: 1.25rem 1rem 0.5rem; background-color: transparent;
-            border: 1px solid #e2e8f0; border-radius: 0.75rem; transition: all 0.2s;
-            color: inherit; min-height: 46px;
+            width: 100%; padding: 1.3rem 1rem 0.45rem; background-color: transparent;
+            border: 1.5px solid #cbd5e1; border-radius: 0.9rem; transition: all 0.2s;
+            color: inherit; min-height: 48px; font-weight: 600;
         }
         .dark .input-group input, .dark .input-group select, .dark .input-group textarea { border-color: #334155; }
         .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
-            outline: none; border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+            outline: none; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.14);
         }
         .input-group label {
-            position: absolute; left: 1rem; top: 0.85rem; font-size: 0.85rem;
-            color: #64748b; pointer-events: none; transition: all 0.2s; transform-origin: left top;
+            position: absolute; left: 1rem; top: 0.9rem; font-size: 0.85rem;
+            color: #64748b; pointer-events: none; transition: all 0.2s; transform-origin: left top; font-weight: 600;
         }
         .input-group input:focus ~ label, .input-group input:not(:placeholder-shown) ~ label,
         .input-group select:focus ~ label, .input-group select:not([value=""]) ~ label,
         .input-group textarea:focus ~ label, .input-group textarea:not(:placeholder-shown) ~ label {
-            top: 0.25rem; font-size: 0.65rem; color: #22c55e; font-weight: 600;
+            top: 0.28rem; font-size: 0.68rem; color: #059669; font-weight: 800; letter-spacing: 0.02em;
         }
         
         .timeline-container { position: relative; padding-left: 24px; }
@@ -655,62 +669,65 @@ service cloud.firestore {
     <div id="sidebarBackdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
 
     <!-- Left Sidebar -->
-    <aside id="mainSidebar" class="w-64 flex-shrink-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col fixed md:relative h-full z-50 shadow-soft transition-transform duration-300 -translate-x-full md:translate-x-0">
-        <div class="h-16 flex items-center px-5 border-b border-slate-100 dark:border-slate-700 justify-between shrink-0">
+    <aside id="mainSidebar" class="w-64 flex-shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800 flex flex-col fixed md:relative h-full z-50 shadow-2xl md:shadow-soft transition-transform duration-300 -translate-x-full md:translate-x-0">
+        <div class="h-16 flex items-center px-5 border-b border-slate-100 dark:border-slate-800 justify-between shrink-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent">
             <div class="flex items-center gap-2.5">
-                <div class="bg-brand-100 text-brand-600 p-1.5 rounded-lg"><i class="ph-fill ph-student text-xl"></i></div>
-                <span class="text-lg font-extrabold tracking-wide text-slate-800 dark:text-white">UVACRM</span>
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-2 rounded-xl shadow-md shadow-emerald-500/20"><i class="ph-fill ph-student text-xl"></i></div>
+                <div>
+                    <span class="text-lg font-extrabold tracking-wide bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent block leading-none">UVACRM</span>
+                    <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Smart Calling Hub</span>
+                </div>
             </div>
             <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-slate-600 text-xl p-2"><i class="ph ph-x"></i></button>
         </div>
         
-        <div class="p-3.5 flex-1 overflow-y-auto space-y-1">
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 px-3">મુખ્ય મેનુ</div>
+        <div class="p-3.5 flex-1 overflow-y-auto space-y-1.5">
+            <div class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 mt-1 px-3">મુખ્ય મેનુ (Main Menu)</div>
             
-            <a href="#" id="nav-dashboard" onclick="switchTab('dashboard', 'ડેશબોર્ડ (Overview)', this)" class="sidebar-link bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400 flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-colors">
+            <a href="#" id="nav-dashboard" onclick="switchTab('dashboard', 'ડેશબોર્ડ (Overview)', this)" class="sidebar-link bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-sm transition-all">
                 <i class="ph-fill ph-squares-four text-lg"></i> ડેશબોર્ડ
             </a>
             
-            <a href="#" id="nav-newlead" onclick="switchTab('newlead', 'નવી લીડ ઉમેરો', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-colors">
-                <i class="ph ph-user-plus text-lg"></i> નવી લીડ (New Lead)
+            <a href="#" id="nav-newlead" onclick="switchTab('newlead', 'નવી લીડ ઉમેરો', this)" class="sidebar-link text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-sm transition-all">
+                <i class="ph-duotone ph-user-plus text-lg text-blue-500"></i> નવી લીડ (New Lead)
             </a>
             
-            <a href="#" id="nav-customers" onclick="switchTab('customers', 'કસ્ટમર લિસ્ટ (કોલિંગ)', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-colors">
-                <span class="flex items-center gap-3"><i class="ph ph-phone-call text-lg"></i> કસ્ટમર (કોલિંગ)</span>
-                <span id="sidebarPendingBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">0</span>
+            <a href="#" id="nav-customers" onclick="switchTab('customers', 'કસ્ટમર લિસ્ટ (કોલિંગ)', this)" class="sidebar-link text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 flex items-center justify-between px-3.5 py-2.5 rounded-xl font-extrabold text-sm transition-all">
+                <span class="flex items-center gap-3"><i class="ph-duotone ph-phone-call text-lg text-emerald-500"></i> કસ્ટમર (કોલિંગ)</span>
+                <span id="sidebarPendingBadge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">0</span>
             </a>
 
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-5 px-3">ફોલો-અપ વિભાગ</div>
+            <div class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 mt-5 px-3">ફોલો-અપ સ્ટેજ (Stages)</div>
 
-            <a href="#" id="nav-followups" onclick="switchTab('followups', '૧. પહેલું ફોલો-અપ', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-colors">
-                <span class="flex items-center gap-3"><i class="ph ph-calendar-check text-lg"></i> ૧. પહેલું ફોલો-અપ</span>
-                <span id="sidebarFollowupBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">0</span>
+            <a href="#" id="nav-followups" onclick="switchTab('followups', '૧. પહેલું ફોલો-અપ', this)" class="sidebar-link text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 flex items-center justify-between px-3.5 py-2.5 rounded-xl font-extrabold text-sm transition-all">
+                <span class="flex items-center gap-3"><i class="ph-duotone ph-calendar-check text-lg text-purple-500"></i> ૧. પહેલું ફોલો-અપ</span>
+                <span id="sidebarFollowupBadge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-purple-600 text-white shadow-sm">0</span>
             </a>
 
-            <a href="#" id="nav-secondfollowup" onclick="switchTab('secondfollowup', '૨. બીજું ફોલો-અપ (મિટિંગ)', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-colors">
+            <a href="#" id="nav-secondfollowup" onclick="switchTab('secondfollowup', '૨. બીજું ફોલો-અપ (મિટિંગ)', this)" class="sidebar-link text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 flex items-center justify-between px-3.5 py-2.5 rounded-xl font-extrabold text-sm transition-all">
                 <span class="flex items-center gap-2.5"><i class="ph-fill ph-lock-key text-amber-500 text-lg"></i> ૨. બીજું ફોલો-અપ</span>
-                <span id="sidebarSecondFollowupBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">0</span>
+                <span id="sidebarSecondFollowupBadge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">0</span>
             </a>
 
-            <a href="#" id="nav-finalfollowup" onclick="switchTab('finalfollowup', '૩. ફાઇનલ ફોલો-અપ (ક્લોઝિંગ)', this)" class="sidebar-link text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-colors">
+            <a href="#" id="nav-finalfollowup" onclick="switchTab('finalfollowup', '૩. ફાઇનલ ફોલો-અપ (ક્લોઝિંગ)', this)" class="sidebar-link text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 flex items-center justify-between px-3.5 py-2.5 rounded-xl font-extrabold text-sm transition-all">
                 <span class="flex items-center gap-2.5"><i class="ph-fill ph-seal-check text-emerald-500 text-lg"></i> ૩. ફાઇનલ ફોલો-અપ</span>
-                <span id="sidebarFinalFollowupBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">0</span>
+                <span id="sidebarFinalFollowupBadge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm">0</span>
             </a>
 
-            <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
-                <button onclick="openExcelImportModal()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 transition">
+            <div class="pt-4 mt-4 border-t border-slate-200/70 dark:border-slate-800 space-y-2">
+                <button onclick="openExcelImportModal()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-500/20 transition">
                     <i class="ph-fill ph-microsoft-excel-logo text-lg"></i> એક્સેલ શીટ ઈમ્પોર્ટ
                 </button>
-                <button onclick="openSheetPasswordModal()" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 transition">
+                <button onclick="openSheetPasswordModal()" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 transition">
                     <span class="flex items-center gap-2.5"><i class="ph-fill ph-download-simple text-lg"></i> શીટ ડાઉનલોડ (7 કોલમ)</span>
                     <i class="ph-fill ph-lock-key text-xs"></i>
                 </button>
             </div>
         </div>
         
-        <div class="p-3.5 border-t border-slate-100 dark:border-slate-700 shrink-0">
-            <button onclick="logout()" class="flex items-center gap-3 w-full px-3 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-bold text-sm transition-colors">
-                <i class="ph ph-sign-out text-lg"></i> લોગઆઉટ (Logout)
+        <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 shrink-0">
+            <button onclick="logout()" class="flex items-center gap-3 w-full px-3.5 py-2.5 text-rose-600 bg-rose-50/70 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-xl font-extrabold text-sm transition-colors">
+                <i class="ph-bold ph-sign-out text-lg"></i> લોગઆઉટ (Logout)
             </button>
         </div>
     </aside>
@@ -785,18 +802,88 @@ service cloud.firestore {
 
         <!-- DASHBOARD TAB -->
         <div id="tab-dashboard" class="tab-content flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 w-full flex flex-col">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-                <h2 id="welcomeGreeting" class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-white">નમસ્તે 👋</h2>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="openExcelImportModal()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 text-xs">
-                        <i class="ph-fill ph-microsoft-excel-logo text-base"></i> એક્સેલ ઈમ્પોર્ટ
+            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 rounded-3xl p-4 sm:p-6 mb-5 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+                <div class="relative z-10">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/20 backdrop-blur-sm">✨ Udaan Vibrant Academy CRM</span>
+                    <h2 id="welcomeGreeting" class="text-xl sm:text-3xl font-extrabold mt-1 tracking-tight">નમસ્તે 👋</h2>
+                    <p class="text-xs sm:text-sm text-emerald-50 font-medium mt-0.5">આજના કોલ્સ, ફોલો-અપ અને એડમિશનનું લાઈવ ડેશબોર્ડ</p>
+                </div>
+                <div class="flex flex-wrap gap-2 relative z-10">
+                    <button onclick="openExcelImportModal()" class="flex-1 sm:flex-none bg-white text-emerald-800 hover:bg-emerald-50 font-extrabold px-4 py-2.5 rounded-xl shadow-md flex items-center justify-center gap-1.5 text-xs sm:text-sm transition">
+                        <i class="ph-fill ph-microsoft-excel-logo text-lg text-emerald-600"></i> એક્સેલ ઈમ્પોર્ટ
                     </button>
-                    <button onclick="switchTab('secondfollowup', '૨. બીજું ફોલો-અપ', document.getElementById('nav-secondfollowup'))" class="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 text-xs">
-                        <i class="ph-fill ph-lock-key text-base"></i> ૨. બીજું ફોલો-અપ
+                    <button onclick="switchTab('secondfollowup', '૨. બીજું ફોલો-અપ', document.getElementById('nav-secondfollowup'))" class="flex-1 sm:flex-none bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-4 py-2.5 rounded-xl shadow-md flex items-center justify-center gap-1.5 text-xs sm:text-sm transition">
+                        <i class="ph-fill ph-lock-key text-lg"></i> ૨. બીજું ફોલો-અપ
                     </button>
-                    <button onclick="switchTab('finalfollowup', '૩. ફાઇનલ ફોલો-અપ', document.getElementById('nav-finalfollowup'))" class="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-1.5 text-xs">
-                        <i class="ph-fill ph-seal-check text-base"></i> ૩. ફાઇનલ ફોલો-અપ
+                    <button onclick="switchTab('finalfollowup', '૩. ફાઇનલ ફોલો-અપ', document.getElementById('nav-finalfollowup'))" class="flex-1 sm:flex-none bg-slate-900/80 hover:bg-slate-900 text-white border border-white/20 font-extrabold px-4 py-2.5 rounded-xl shadow-md flex items-center justify-center gap-1.5 text-xs sm:text-sm transition">
+                        <i class="ph-fill ph-seal-check text-lg text-emerald-400"></i> ૩. ફાઇનલ ફોલો-અપ
                     </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+                <div onclick="switchTab('customers', 'કસ્ટમર લિસ્ટ', document.getElementById('nav-customers'))" class="crm-card bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg shadow-blue-600/20 cursor-pointer text-white relative overflow-hidden">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-3">
+                        <i class="ph-fill ph-users text-2xl"></i>
+                    </div>
+                    <h4 class="text-blue-100 font-bold text-xs sm:text-sm mb-0.5">કુલ લીડ્સ (Total Leads)</h4>
+                    <div class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight" id="statTotalLeads">0</div>
+                </div>
+
+                <div onclick="openPendingCallsFromDash()" class="crm-card bg-gradient-to-br from-amber-500 via-orange-500 to-rose-600 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg shadow-orange-500/20 cursor-pointer text-white relative overflow-hidden">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-3">
+                        <i class="ph-fill ph-phone-outgoing text-2xl"></i>
+                    </div>
+                    <h4 class="text-amber-50 font-bold text-xs sm:text-sm mb-0.5">બાકી કોલ્સ (Pending)</h4>
+                    <div class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight" id="statPendingCalls">0</div>
+                </div>
+
+                <div onclick="openCompletedCallsFromDash()" class="crm-card bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg shadow-emerald-500/20 cursor-pointer text-white relative overflow-hidden">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-3">
+                        <i class="ph-fill ph-check-circle text-2xl"></i>
+                    </div>
+                    <h4 class="text-emerald-50 font-bold text-xs sm:text-sm mb-0.5">પૂર્ણ કોલ્સ (Completed)</h4>
+                    <div class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight" id="statCompletedCalls">0</div>
+                </div>
+
+                <div onclick="switchTab('secondfollowup', '૨. બીજું ફોલો-અપ', document.getElementById('nav-secondfollowup'))" class="crm-card bg-gradient-to-br from-purple-600 via-violet-600 to-fuchsia-700 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg shadow-purple-600/20 cursor-pointer text-white relative overflow-hidden">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white mb-3">
+                        <i class="ph-fill ph-handshake text-2xl"></i>
+                    </div>
+                    <h4 class="text-purple-100 font-bold text-xs sm:text-sm mb-0.5">રૂબરૂ મિટિંગ (Meets)</h4>
+                    <div class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight" id="statPhysicalMeets">0</div>
+                </div>
+
+                <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border-l-4 border-emerald-500 border border-slate-200/70 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 dark:text-slate-400 font-extrabold text-xs">એડમિશન (Admissions)</h4>
+                        <div class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="statAdmissions">0</div>
+                    </div>
+                    <div class="w-11 h-11 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-2xl flex items-center justify-center"><i class="ph-fill ph-student text-2xl"></i></div>
+                </div>
+                
+                <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border-l-4 border-rose-500 border border-slate-200/70 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 dark:text-slate-400 font-extrabold text-xs">સમય વીતી ગયેલ (Overdue)</h4>
+                        <div class="text-2xl font-extrabold text-rose-600 mt-0.5" id="statOverdue">0</div>
+                    </div>
+                    <div class="w-11 h-11 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-2xl flex items-center justify-center"><i class="ph-fill ph-warning-circle text-2xl"></i></div>
+                </div>
+
+                <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border-l-4 border-amber-500 border border-slate-200/70 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 dark:text-slate-400 font-extrabold text-xs">આજના ફોલો-અપ</h4>
+                        <div class="text-2xl font-extrabold text-amber-600 mt-0.5" id="statTodayFollowups">0</div>
+                    </div>
+                    <div class="w-11 h-11 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-2xl flex items-center justify-center"><i class="ph-fill ph-calendar-check text-2xl"></i></div>
+                </div>
+
+                <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-soft border-l-4 border-purple-600 border border-slate-200/70 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-slate-500 dark:text-slate-400 font-extrabold text-xs">ફાઇનલ ક્લોઝ્ડ</h4>
+                        <div class="text-2xl font-extrabold text-purple-600 mt-0.5" id="statFinalClosed">0</div>
+                    </div>
+                    <div class="w-11 h-11 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-2xl flex items-center justify-center"><i class="ph-fill ph-seal-check text-2xl"></i></div>
                 </div>
             </div>
             
@@ -868,19 +955,25 @@ service cloud.firestore {
 
             <!-- 1st Caller Daily Call Performance Section (Dashboard - Only 1st Caller Shown, 2nd Caller Kept Private) -->
             <div class="mt-6 bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 shadow-soft border border-slate-100 dark:border-slate-700">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-10 h-10 rounded-2xl bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center">
-                            <i class="ph-fill ph-phone-Outgoing text-xl"></i>
+                        <div class="w-10 h-10 rounded-2xl bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center shrink-0">
+                            <i class="ph-fill ph-phone-outgoing text-xl"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-white">📞 પહેલા કોલરનો દૈનિક કોલ રિપોર્ટ (1st Caller Daily Report)</h3>
-                            <p class="text-[11px] text-slate-500">આખા દિવસમાં પહેલા કોલરે કેટલા કોલ કર્યા અને કેટલા પૂર્ણ થયા તેની તારીખ/સમય સાથે વિગત</p>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-white">📞 પહેલા કોલરનો દૈનિક કોલ રિપોર્ટ (1st Caller Date-Wise Report)</h3>
+                            <p class="text-[11px] text-slate-500">તારીખ પસંદ કરીને પહેલા કોલરે તે દિવસે કેટલા કોલ પૂર્ણ કર્યા તેનો રિપોર્ટ જુઓ</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <i class="ph-bold ph-calendar text-brand-600 text-sm"></i>
+                            <span class="text-[11px] font-bold text-slate-500">તારીખ:</span>
+                            <input type="date" id="dashReportDateFilter" onchange="updateDashboardStats()" class="bg-transparent text-xs font-extrabold text-slate-800 dark:text-white outline-none">
+                            <button type="button" onclick="resetDashDateToToday()" class="text-[10px] font-extrabold text-brand-600 hover:underline ml-1">આજે</button>
+                        </div>
                         <span class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">
-                            આજના પૂર્ણ કોલ્સ: <span id="dashFirstCallerTodayCount">0</span>
+                            પસંદ કરેલ તારીખના કોલ્સ: <span id="dashFirstCallerTodayCount">0</span>
                         </span>
                         <span class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-extrabold text-xs">
                             કુલ પૂર્ણ કોલ્સ: <span id="dashFirstCallerTotalCount">0</span>
@@ -888,7 +981,10 @@ service cloud.firestore {
                     </div>
                 </div>
 
-                <!-- 7-Day Mini Chart for 1st Caller Only -->
+                <!-- Selected Date Detailed Breakdown for 1st Caller -->
+                <div id="dashSelectedDateSummaryBox" class="mb-4 p-3 rounded-2xl bg-brand-50/60 dark:bg-slate-900/80 border border-brand-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs"></div>
+
+                <!-- 7-Day Mini Chart for 1st Caller Only (Ending on Selected Date) -->
                 <div id="dashFirstCallerDailyBars" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5"></div>
             </div>
         </div>
@@ -1050,7 +1146,7 @@ service cloud.firestore {
                         </button>
                     </div>
 
-                    <div class="lg:col-span-7 grid grid-cols-3 gap-2">
+                    <div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <select id="filterPendingSubtag" onchange="renderCustomersList()" class="w-full bg-amber-50 dark:bg-slate-900 border border-amber-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-300 rounded-xl px-2.5 py-2 outline-none min-h-[40px]">
                             <option value="all">⏳ પેન્ડિંગ સબ-ટેગ (All)</option>
                             <option value="Fresh / Not Dialed">🆕 ફ્રેશ / કોલ બાકી</option>
@@ -1076,6 +1172,10 @@ service cloud.firestore {
                             <option value="admission">🎉 એડમિશન કન્ફર્મ</option>
                             <option value="lost">❌ રસ નથી (Lost)</option>
                         </select>
+                        <div class="flex items-center bg-blue-50 dark:bg-slate-900 border border-blue-300 dark:border-slate-700 rounded-xl px-2 py-1 min-h-[40px]">
+                            <input type="date" id="filterCustomerDate" onchange="renderCustomersList()" class="w-full bg-transparent text-xs font-extrabold text-blue-900 dark:text-blue-300 outline-none" title="તારીખ મુજબ ફિલ્ટર">
+                            <button type="button" onclick="document.getElementById('filterCustomerDate').value=''; renderCustomersList();" class="text-xs text-red-500 font-bold px-1" title="તારીખ ક્લિયર કરો">✕</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1208,6 +1308,9 @@ service cloud.firestore {
                             <option value="web" id="optFinWeb">🌐 Web Development (0)</option>
                             <option value="all_courses" id="optFinAllCourses">📚 તમામ કોર્સ માહિતી (0)</option>
                         </select>
+                        <button onclick="toggleFinalDataCleanupPanel()" class="px-3.5 py-2.5 text-xs sm:text-sm font-extrabold bg-rose-600 hover:bg-rose-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm min-h-[42px]">
+                            <i class="ph-bold ph-trash"></i> ઈમ્પોર્ટ & ડુપ્લિકેટ ડિલીટ
+                        </button>
                         <button onclick="toggleFinalAnalyticsPanel()" class="px-3.5 py-2.5 text-xs sm:text-sm font-extrabold bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm min-h-[42px]">
                             <i class="ph-bold ph-chart-bar"></i> દૈનિક ચાર્ટ & રિપોર્ટ
                         </button>
@@ -1223,50 +1326,90 @@ service cloud.firestore {
                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-4">
-                    <!-- Private Final Review Statistics & Daily Chart Panel (Shows 1st Caller + Private 2nd Caller + Final Closing Stats) -->
-                    <div id="finalCallerAnalyticsPanel" class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 shadow-soft border-2 border-purple-200 dark:border-purple-900/60 space-y-5">
+                    <!-- Final Reviewer Only: Imported Data & Duplicate Cleanup Manager -->
+                    <div id="finalDataCleanupPanel" class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 shadow-soft border-2 border-rose-200 dark:border-rose-900/60 space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
                             <div>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 uppercase">🔒 પ્રાઇવેટ ફાઇનલ રિવ્યુ એનાલિટિક્સ</span>
-                                <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white mt-1">📊 ૧. પહેલો કોલર vs ૨. બીજો કોલર (Private) vs ૩. ફાઇનલ ક્લોઝિંગ ચાર્ટ</h3>
-                                <p class="text-xs text-slate-500">દૈનિક તારીખ અને સમય મુજબ કયા કોલરે કેટલા કોલ લીધા અને કેટલા ક્લોઝ કર્યા તેનો સંપૂર્ણ હિસાબ</p>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 uppercase">🛡️ ફક્ત ફાઇનલ રિવ્યુઅર માટે (Admin Control)</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white mt-1">🧹 ઈમ્પોર્ટ કરેલ ડેટા & ડુપ્લિકેટ નંબર ડિલીટ મેનેજર</h3>
+                                <p class="text-xs text-slate-500">સરખા મોબાઈલ નંબરવાળા ડુપ્લિકેટ ડેટા અથવા ઈમ્પોર્ટ કરેલી એક્સેલ ફાઇલ/ડેટા અહીંથી ૧-ક્લિકમાં ડિલીટ કરી શકાશે.</p>
                             </div>
-                            <button onclick="downloadFinalCallerActivityExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-2 shrink-0">
-                                <i class="ph-bold ph-download-simple text-base"></i> કોલર એક્ટિવિટી & ડેઇલી રિપોર્ટ ડાઉનલોડ
-                            </button>
+                            <div class="flex flex-wrap gap-2 shrink-0">
+                                <button onclick="deleteDuplicatePhoneLeads()" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-1.5">
+                                    <i class="ph-bold ph-copy"></i> ડુપ્લિકેટ નંબર ડિલીટ કરો (<span id="dupCountBadge">0</span>)
+                                </button>
+                                <button onclick="deleteAllPendingImportedLeads()" class="bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-1.5">
+                                    <i class="ph-bold ph-trash"></i> તમામ ફ્રેશ ઈમ્પોર્ટ ડેટા ડિલીટ (<span id="importedPendingCountBadge">0</span>)
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Summary KPI Cards inside Final Review -->
+                        <!-- Imported Batches / Files List -->
+                        <div>
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">📂 ઈમ્પોર્ટ કરેલ ફાઇલ / બેચ હિસ્ટ્રી (Batch Wise Delete)</h4>
+                            <div id="importedBatchesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+                        </div>
+                    </div>
+
+                    <!-- Private Final Review Statistics & Daily Chart Panel (Shows 1st Caller + Private 2nd Caller + Final Closing Stats) -->
+                    <div id="finalCallerAnalyticsPanel" class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 shadow-soft border-2 border-purple-200 dark:border-purple-900/60 space-y-5">
+                        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 uppercase">🔒 પ્રાઇવેટ ફાઇનલ રિવ્યુ એનાલિટિક્સ (Date-Wise)</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white mt-1">📊 ૧. પહેલો કોલર vs ૨. બીજો કોલર (Private) vs ૩. ફાઇનલ ક્લોઝિંગ ચાર્ટ</h3>
+                                <p class="text-xs text-slate-500">પસંદ કરેલી તારીખ અથવા રેન્જ મુજબ કયા કોલરે કેટલા કોલ લીધા અને કેટલા ક્લોઝ કર્યા તેનો દૈનિક ચાર્ટ</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                    <span class="text-[11px] font-extrabold text-slate-500 px-1.5">📅 તારીખ:</span>
+                                    <input type="date" id="finalChartStartDate" onchange="onFinalChartDateChange()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-slate-800 dark:text-white outline-none">
+                                    <span class="text-xs font-bold text-slate-400">થી</span>
+                                    <input type="date" id="finalChartEndDate" onchange="onFinalChartDateChange()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-slate-800 dark:text-white outline-none">
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="setFinalChartQuickRange(0)" class="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-extrabold text-[11px]">આજે</button>
+                                    <button type="button" onclick="setFinalChartQuickRange(6)" class="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-extrabold text-[11px]">૭ દિવસ</button>
+                                    <button type="button" onclick="setFinalChartQuickRange(14)" class="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-extrabold text-[11px]">૧૫ દિવસ</button>
+                                    <button type="button" onclick="setFinalChartQuickRange(29)" class="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-extrabold text-[11px]">૩૦ દિવસ</button>
+                                </div>
+                                <label class="inline-flex items-center gap-1.5 text-xs font-extrabold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-3 py-1.5 rounded-xl border border-purple-200 dark:border-purple-800 cursor-pointer">
+                                    <input type="checkbox" id="filterFinalCardsByDateToggle" onchange="renderFinalFollowupView()" class="rounded text-purple-600">
+                                    <span>નીચેના કાર્ડ્સ પણ તારીખ મુજબ ફિલ્ટર કરો</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Summary KPI Cards inside Final Review (Updates by Selected Date Range) -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                             <div class="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-slate-900 border border-blue-200 dark:border-slate-700">
-                                <span class="text-[11px] font-extrabold text-blue-700 dark:text-blue-400 block">૧. પહેલા કોલરે પૂર્ણ કરેલ (આજે / કુલ)</span>
+                                <span class="text-[11px] font-extrabold text-blue-700 dark:text-blue-400 block">૧. પહેલો કોલર પૂર્ણ (પસંદ તારીખ / કુલ)</span>
                                 <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1" id="finStatFirstCaller">0 / 0</div>
                             </div>
                             <div class="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-slate-900 border border-amber-200 dark:border-slate-700">
-                                <span class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 block">🔒 ૨. બીજા કોલરે ક્લોઝ કરેલ (આજે / કુલ)</span>
+                                <span class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 block">🔒 ૨. બીજો કોલર ક્લોઝ (પસંદ તારીખ / કુલ)</span>
                                 <div class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-1" id="finStatSecondCaller">0 / 0</div>
                             </div>
                             <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-slate-900 border border-emerald-200 dark:border-slate-700">
-                                <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block">૩. ફાઇનલ ક્લોઝ્ડ એડમિશન (આજે / કુલ)</span>
+                                <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block">૩. ફાઇનલ એડમિશન (પસંદ તારીખ / કુલ)</span>
                                 <div class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-1" id="finStatFinalCaller">0 / 0</div>
                             </div>
                             <div class="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-slate-900 border border-purple-200 dark:border-slate-700">
-                                <span class="text-[11px] font-extrabold text-purple-700 dark:text-purple-400 block">કુલ એક્ટિવિટી લોગ્સ</span>
+                                <span class="text-[11px] font-extrabold text-purple-700 dark:text-purple-400 block">પસંદ તારીખમાં કુલ કોલર ક્રિયાઓ</span>
                                 <div class="text-xl sm:text-2xl font-extrabold text-purple-600 mt-1" id="finStatTotalLogs">0</div>
                             </div>
                         </div>
 
-                        <!-- Daily Comparison Bar Chart (Last 7 Days) -->
+                        <!-- Daily Comparison Bar Chart (Dynamic Based on Selected Date Range) -->
                         <div>
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">📅 છેલ્લા ૭ દિવસનો દૈનિક ચાર્ટ (Daily Wise Caller Chart)</h4>
+                                <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500" id="finalChartRangeTitle">📅 પસંદ કરેલી તારીખ મુજબ દૈનિક ચાર્ટ (Date-Wise Daily Chart)</h4>
                                 <div class="flex flex-wrap gap-3 text-[11px] font-bold">
                                     <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500 inline-block"></span> ૧. પહેલો કોલર પૂર્ણ</span>
                                     <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-500 inline-block"></span> ૨. બીજો કોલર ક્લોઝ (Private)</span>
                                     <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> ૩. ફાઇનલ ક્લોઝ</span>
                                 </div>
                             </div>
-                            <div id="finalDailyChartContainer" class="grid grid-cols-1 sm:grid-cols-7 gap-2.5 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700"></div>
+                            <div id="finalDailyChartContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 max-h-[340px] overflow-y-auto"></div>
                         </div>
                     </div>
 
@@ -1442,6 +1585,27 @@ service cloud.firestore {
     let activeSecondCourseFilter = 'all';
     let activeFinalCourseFilter = 'all';
 
+    // Pagination & Performance Limits to prevent mobile/PC hanging on large imports
+    const PAGE_BATCH_SIZE = 48;
+    let customersRenderLimit = PAGE_BATCH_SIZE;
+    let followupsRenderLimit = PAGE_BATCH_SIZE;
+    let secondRenderLimit = PAGE_BATCH_SIZE;
+    let finalRenderLimit = PAGE_BATCH_SIZE;
+    let saveLocalDebounceTimer = null;
+    let searchDebounceTimer = null;
+
+    const persistLocalCRM = (immediate = false) => {
+        if (immediate) {
+            if (saveLocalDebounceTimer) clearTimeout(saveLocalDebounceTimer);
+            try { localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM)); } catch (e) {}
+            return;
+        }
+        if (saveLocalDebounceTimer) clearTimeout(saveLocalDebounceTimer);
+        saveLocalDebounceTimer = setTimeout(() => {
+            try { localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM)); } catch (e) {}
+        }, 250);
+    };
+
     // Cloud Sync Helper Functions (Saves every lead to Firestore so all devices stay in sync)
     const updateCloudBadgeUI = (state, msg) => {
         const badge = document.getElementById('cloudSyncBadge');
@@ -1593,7 +1757,7 @@ service cloud.firestore {
 
             extendedCRM.customers = mergedList;
             normalizeCustomerRecords();
-            localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
+            persistLocalCRM();
 
             renderCustomersList();
             renderFollowupsList();
@@ -1729,10 +1893,14 @@ service cloud.firestore {
         const searchEl = document.getElementById('globalSearch');
         if (searchEl) {
             searchEl.addEventListener('input', () => {
-                if (document.getElementById('tab-customers').classList.contains('hidden')) {
-                    switchTab('customers', 'કસ્ટમર લિસ્ટ', document.getElementById('nav-customers'));
-                }
-                renderCustomersList();
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    customersRenderLimit = PAGE_BATCH_SIZE;
+                    if (document.getElementById('tab-customers').classList.contains('hidden')) {
+                        switchTab('customers', 'કસ્ટમર લિસ્ટ', document.getElementById('nav-customers'));
+                    }
+                    renderCustomersList();
+                }, 180);
             });
         }
 
@@ -2177,11 +2345,11 @@ service cloud.firestore {
     window.switchTab = (tabId, title, element = null) => {
         if (element) {
             document.querySelectorAll('.sidebar-link').forEach(el => {
-                el.classList.remove('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
-                el.classList.add('text-slate-600', 'dark:text-slate-400');
+                el.classList.remove('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600', 'text-white', 'shadow-md', 'shadow-emerald-500/25', 'bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+                el.classList.add('text-slate-700', 'dark:text-slate-300');
             });
-            element.classList.remove('text-slate-600', 'dark:text-slate-400');
-            element.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+            element.classList.remove('text-slate-700', 'dark:text-slate-300', 'text-slate-600', 'dark:text-slate-400');
+            element.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600', 'text-white', 'shadow-md', 'shadow-emerald-500/25');
         }
 
         document.querySelectorAll('.mnav-btn').forEach(btn => {
@@ -2440,6 +2608,7 @@ service cloud.firestore {
     window.handleExcelFileSelect = (event) => {
         const file = event.target.files[0];
         if (!file) return;
+        window.currentExcelFileName = file.name;
         document.getElementById('excelFileNameLabel').innerText = `પસંદ કરેલ ફાઇલ: ${file.name}`;
 
         const reader = new FileReader();
@@ -2497,12 +2666,17 @@ service cloud.firestore {
         btn.innerText = "ઈમ્પોર્ટ થાય છે...";
 
         const agentNameStr = currentAgent ? currentAgent.displayName : "Agent";
+        const batchId = "BATCH_" + Date.now();
+        const batchFileName = window.currentExcelFileName || `Excel_${new Date().toLocaleDateString()}`;
+        const batchTimestamp = new Date().toISOString();
         let importedCount = 0;
         const newlyImportedLeads = [];
+        const baseCount = extendedCRM.customers.length;
 
-        for (const row of parsedExcelRows) {
-            const cid = "ID_" + Date.now() + "_" + Math.floor(Math.random() * 10000) + "_" + importedCount;
-            const leadIdStr = `UVA-${new Date().getFullYear()}-${String(extendedCRM.customers.length + 1).padStart(6, '0')}`;
+        for (let i = 0; i < parsedExcelRows.length; i++) {
+            const row = parsedExcelRows[i];
+            const cid = "ID_" + Date.now() + "_" + i + "_" + Math.floor(Math.random() * 1000);
+            const leadIdStr = `UVA-${new Date().getFullYear()}-${String(baseCount + importedCount + 1).padStart(6, '0')}`;
 
             const newCust = {
                 id: cid,
@@ -2516,6 +2690,9 @@ service cloud.firestore {
                 areaInfo: row.area || '',
                 edu: row.std || '',
                 source: 'Excel Import',
+                importBatchId: batchId,
+                importFileName: batchFileName,
+                importBatchTime: batchTimestamp,
                 firstFollowupNotes: '', // Strictly blank for first caller
                 firstCallerTypedNote: false,
                 secondFollowupNotes: '',
@@ -2528,28 +2705,33 @@ service cloud.firestore {
                 pendingSubTag: 'Fresh / Not Dialed',
                 secondFollowupStage: 'none',
                 assignedAgent: agentNameStr,
-                created: new Date().toISOString(),
-                updated: new Date().toISOString(),
-                lastContact: new Date().toISOString(),
+                created: batchTimestamp,
+                updated: batchTimestamp,
+                lastContact: batchTimestamp,
                 isDeleted: false
             };
 
-            extendedCRM.customers.unshift(newCust);
             newlyImportedLeads.push(newCust);
-            logActivity(cid, 'create', `એક્સેલ ઈમ્પોર્ટ [${leadIdStr}]`, `એરિયા: ${newCust.areaInfo || '-'}`, agentNameStr);
-            syncCustomerRowToGoogleSheet(newCust, 'EXCEL_IMPORT');
             importedCount++;
         }
 
-        localStorage.setItem("uvaExtendedCRM", JSON.stringify(extendedCRM));
-        await saveMultipleCustomersToCloud(newlyImportedLeads);
+        // Prepend all imported rows in one fast operation so browser never hangs
+        extendedCRM.customers = [...newlyImportedLeads, ...extendedCRM.customers];
+        persistLocalCRM(true);
+
         closeExcelImportModal();
+        customersRenderLimit = PAGE_BATCH_SIZE;
         setCustomerCallTab('pending');
         switchTab('customers', 'કસ્ટમર લિસ્ટ (કોલિંગ)', document.getElementById('nav-customers'));
         updateDashboardStats();
-        customToast(`${importedCount} લીડ્સ ક્લાઉડમાં સેવ થઈ ગઈ! હવે બધા ડિવાઇસમાં દેખાશે.`);
+        customToast(`${importedCount} લીડ્સ ઝડપથી ઈમ્પોર્ટ થઈ ગઈ! બેકગ્રાઉન્ડમાં ક્લાઉડ સિંક ચાલુ છે...`);
         btn.disabled = false;
         btn.innerText = "ઈમ્પોર્ટ કરો & શીટ સિંક કરો";
+
+        // Non-blocking background sync to Firestore Cloud so UI stays instant
+        setTimeout(() => {
+            saveMultipleCustomersToCloud(newlyImportedLeads);
+        }, 100);
     };
 
     // DIRECT CALL & POST-CALL OUTCOME
@@ -2846,40 +3028,55 @@ service cloud.firestore {
             return;
         }
 
-        grid.innerHTML = secondLeads.map(c => `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border-2 border-amber-200 dark:border-amber-800/70 p-4 flex flex-col justify-between hover:shadow-md transition">
+        const visibleSecondLeads = secondLeads.slice(0, secondRenderLimit);
+        const remainingSecond = secondLeads.length - visibleSecondLeads.length;
+
+        grid.innerHTML = visibleSecondLeads.map(c => `
+            <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-amber-300/80 dark:border-amber-700/70 p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500"></div>
                 <div>
-                    <div class="flex justify-between items-start gap-2 mb-2">
+                    <div class="flex justify-between items-start gap-2 mb-2 mt-1">
                         <div class="min-w-0">
-                            <div class="flex flex-wrap gap-1.5 mb-1.5">
-                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-purple-100 text-purple-700">🤝 ${c.followUpType === 'Demo Class' ? 'ડેમો ક્લાસ' : 'રૂબરૂ મિટિંગ'}</span>
-                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-900">🎓 ${c.course}</span>
+                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm">🤝 ${c.followUpType === 'Demo Class' ? 'ડેમો ક્લાસ' : 'રૂબરૂ મિટિંગ'}</span>
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">🎓 ${c.course}</span>
                             </div>
                             <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate">${c.name}</h3>
-                            <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                            <p class="text-sm font-mono font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5">📞 ${c.phone} ${c.edu ? `<span class="text-slate-500 font-sans">• STD: ${c.edu}</span>` : ''}</p>
                         </div>
-                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
+                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 shrink-0">${c.leadId}</span>
                     </div>
-                    <div class="text-xs sm:text-sm space-y-1.5 text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
-                        <div><b>૧. સિલેક્ટ કરેલ કોર્સ:</b> <span class="text-brand-600 font-extrabold">${c.course}</span></div>
-                        ${(c.areaInfo || c.city) ? `<div><b>📍 એરિયા (AREA):</b> <span class="text-blue-600 dark:text-blue-400 font-bold">${c.areaInfo || c.city}</span></div>` : ''}
-                        <div><b>⏰ મિટિંગ સમય:</b> ${c.followup ? new Date(c.followup).toLocaleString() : '<span class="text-slate-400">સમય સિલેક્ટ કરેલ નથી</span>'}</div>
-                        <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70 text-slate-800 dark:text-slate-100">
-                            <span class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 block">📝 ૧. પહેલા ફોલો-અપની નોંધ (First Caller Note):</span>
+                    <div class="text-xs sm:text-sm space-y-1.5 text-slate-700 dark:text-slate-200 bg-slate-50/90 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-200/70 dark:border-slate-700">
+                        <div><b>૧. સિલેક્ટ કરેલ કોર્સ:</b> <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">${c.course}</span></div>
+                        ${(c.areaInfo || c.city) ? `<div><b>📍 એરિયા (AREA):</b> <span class="text-blue-600 dark:text-blue-400 font-extrabold">${c.areaInfo || c.city}</span></div>` : ''}
+                        <div><b>⏰ મિટિંગ સમય:</b> <span class="font-bold text-purple-600 dark:text-purple-400">${c.followup ? new Date(c.followup).toLocaleString() : 'સમય સિલેક્ટ કરેલ નથી'}</span></div>
+                        <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-slate-800 dark:text-slate-100 mt-1">
+                            <span class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 block mb-0.5">📝 ૧. પહેલા ફોલો-અપની નોંધ (First Caller Note):</span>
                             <span class="font-bold whitespace-pre-wrap">${c.firstFollowupNotes || '-'}</span>
                         </div>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openSecondFollowupModal('${c.id}')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5">
+                    <button onclick="openSecondFollowupModal('${c.id}')" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 transition">
                         <i class="ph-bold ph-check-square-offset text-lg"></i> મિટિંગ & ફી વિગત ભરો
                     </button>
-                    <button onclick="triggerDirectCall('${c.id}')" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-3 rounded-xl text-base shadow-sm flex items-center justify-center">
+                    <button onclick="triggerDirectCall('${c.id}')" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-3 rounded-xl text-base shadow-md shadow-emerald-500/20 flex items-center justify-center transition">
                         <i class="ph-fill ph-phone-call"></i>
                     </button>
                 </div>
             </div>
-        `).join('');
+        `).join('') + (remainingSecond > 0 ? `
+            <div class="col-span-full flex justify-center py-4">
+                <button onclick="loadMoreSecondFollowups()" class="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-md">
+                    વધુ ${remainingSecond} લીડ્સ જુઓ (Load More)
+                </button>
+            </div>
+        ` : '');
+    };
+
+    window.loadMoreSecondFollowups = () => {
+        secondRenderLimit += PAGE_BATCH_SIZE;
+        renderSecondFollowupView();
     };
 
     window.openSecondFollowupModal = (customerId) => {
@@ -3029,8 +3226,22 @@ service cloud.firestore {
         unlockedBox.classList.remove('hidden');
 
         renderFinalCallerStatisticsAndChart();
+        renderFinalImportAndDuplicateCleanupManager();
 
-        const finalLeads = allFinalLeads.filter(c => matchesCourseCategory(c, activeFinalCourseFilter));
+        let finalLeads = allFinalLeads.filter(c => matchesCourseCategory(c, activeFinalCourseFilter));
+
+        // Optional Date Range Filter on Final Review Cards
+        const filterCardsByDate = document.getElementById('filterFinalCardsByDateToggle')?.checked;
+        if (filterCardsByDate) {
+            const startInput = document.getElementById('finalChartStartDate')?.value;
+            const endInput = document.getElementById('finalChartEndDate')?.value;
+            if (startInput && endInput) {
+                finalLeads = finalLeads.filter(c => {
+                    const dKey = getDateKey(c.finalCallerAt || c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated);
+                    return dKey && dKey >= startInput && dKey <= endInput;
+                });
+            }
+        }
 
         if (finalLeads.length === 0) {
             grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">
@@ -3046,7 +3257,10 @@ service cloud.firestore {
             return isNaN(d.getTime()) ? '-' : d.toLocaleString('gu-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         };
 
-        grid.innerHTML = finalLeads.map(c => {
+        const visibleFinalLeads = finalLeads.slice(0, finalRenderLimit);
+        const remainingFinal = finalLeads.length - visibleFinalLeads.length;
+
+        grid.innerHTML = visibleFinalLeads.map(c => {
             const totalFee = Number(c.fixedFee || 0);
             const advFee = Number(c.advanceFee || 0);
             const remFee = Math.max(0, totalFee - advFee);
@@ -3055,47 +3269,48 @@ service cloud.firestore {
             const finalDt = c.finalCallerAt ? formatDt(c.finalCallerAt) : null;
 
             return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border-2 border-emerald-200 dark:border-emerald-800/70 p-4 flex flex-col justify-between hover:shadow-md transition">
+            <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-emerald-300/80 dark:border-emerald-800/70 p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500"></div>
                 <div>
-                    <div class="flex justify-between items-start gap-2 mb-2">
+                    <div class="flex justify-between items-start gap-2 mb-2 mt-1">
                         <div class="min-w-0">
-                            <div class="flex flex-wrap gap-1.5 mb-1.5">
-                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800">${c.finalFollowupNotes ? '✅ ફાઇનલ મેસેજ મોકલાયો' : '⏳ ફાઇનલ ક્લોઝિંગ બાકી'}</span>
-                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-blue-100 text-blue-800">🎓 ${c.course}</span>
+                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold ${c.finalFollowupNotes ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm' : 'bg-amber-100 text-amber-900 border border-amber-300'}">${c.finalFollowupNotes ? '✅ ફાઇનલ મેસેજ મોકલાયો' : '⏳ ફાઇનલ ક્લોઝિંગ બાકી'}</span>
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-100 text-blue-900 border border-blue-200">🎓 ${c.course}</span>
                             </div>
                             <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate">${c.name}</h3>
-                            <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                            <p class="text-sm font-mono font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5">📞 ${c.phone} ${c.edu ? `<span class="text-slate-500 font-sans">• STD: ${c.edu}</span>` : ''}</p>
                         </div>
-                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
+                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 shrink-0">${c.leadId}</span>
                     </div>
 
-                    <div class="text-xs sm:text-sm space-y-2 bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-100 dark:border-slate-700">
+                    <div class="text-xs sm:text-sm space-y-2 bg-slate-50/90 dark:bg-slate-900/70 p-3 rounded-xl mb-3 border border-slate-200/70 dark:border-slate-700">
                         <div class="grid grid-cols-3 gap-1.5 text-xs">
-                            <div class="bg-white dark:bg-slate-800 p-2 rounded-lg text-center border">કુલ ફી<br><b class="text-sm">₹${totalFee}</b></div>
-                            <div class="bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-lg text-center border border-emerald-200">એડવાન્સ<br><b class="text-sm text-emerald-600">₹${advFee}</b></div>
-                            <div class="bg-red-50 dark:bg-red-950/40 p-2 rounded-lg text-center border border-red-200">બાકી ફી<br><b class="text-sm text-red-600">₹${remFee}</b></div>
+                            <div class="bg-white dark:bg-slate-800 p-2 rounded-xl text-center border border-slate-200 dark:border-slate-700 shadow-sm"><span class="text-[10px] font-bold text-slate-400 block">કુલ ફી</span><b class="text-sm text-slate-800 dark:text-white">₹${totalFee}</b></div>
+                            <div class="bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-xl text-center border border-emerald-200 dark:border-emerald-800 shadow-sm"><span class="text-[10px] font-bold text-emerald-600 block">એડવાન્સ</span><b class="text-sm text-emerald-600">₹${advFee}</b></div>
+                            <div class="bg-rose-50 dark:bg-rose-950/40 p-2 rounded-xl text-center border border-rose-200 dark:border-rose-800 shadow-sm"><span class="text-[10px] font-bold text-rose-500 block">બાકી ફી</span><b class="text-sm text-rose-600">₹${remFee}</b></div>
                         </div>
 
                         <!-- 1st Caller Info + Exact Date & Time -->
-                        <div class="p-2 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70 text-xs">
+                        <div class="p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70 text-xs">
                             <div class="flex justify-between items-center text-[11px] font-extrabold text-blue-700 dark:text-blue-400 mb-0.5">
-                                <span>📞 ૧. પહેલો કોલર ક્લોઝ (${c.firstCallerName || c.assignedAgent || 'Caller 1'})</span>
+                                <span>📞 ૧. પહેલો કોલર (${c.firstCallerName || c.assignedAgent || 'Caller 1'})</span>
                                 <span>🕒 ${firstDt}</span>
                             </div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 whitespace-pre-wrap">${c.firstFollowupNotes || c.internalNote || '-'}</span>
                         </div>
 
                         <!-- 2nd Caller Private Info + Exact Date & Time (Shown Only in Final Review) -->
-                        <div class="p-2 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/70 text-xs">
+                        <div class="p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/70 text-xs">
                             <div class="flex justify-between items-center text-[11px] font-extrabold text-amber-800 dark:text-amber-400 mb-0.5">
-                                <span>🔒 ૨. બીજો કોલર ક્લોઝ (${c.secondCallerName || (c.secondFollowupData && c.secondFollowupData.closedBy) || 'Caller 2'})</span>
+                                <span>🔒 ૨. બીજો કોલર (${c.secondCallerName || (c.secondFollowupData && c.secondFollowupData.closedBy) || 'Caller 2'})</span>
                                 <span>🕒 ${secondDt}</span>
                             </div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 whitespace-pre-wrap">${c.secondFollowupNotes || '-'}</span>
                         </div>
 
                         ${c.finalFollowupNotes ? `
-                        <div class="p-2 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/70 text-xs">
+                        <div class="p-2.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/70 text-xs">
                             <div class="flex justify-between items-center text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 mb-0.5">
                                 <span>✅ ૩. ફાઇનલ ક્લોઝ (${c.finalCallerName || 'Final Caller'})</span>
                                 <span>🕒 ${finalDt || '-'}</span>
@@ -3106,15 +3321,172 @@ service cloud.firestore {
                 </div>
 
                 <div class="flex gap-2">
-                    <button onclick="openFinalFollowupModal('${c.id}')" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm flex items-center justify-center gap-1.5">
+                    <button onclick="openFinalFollowupModal('${c.id}')" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition">
                         <i class="ph-fill ph-whatsapp-logo text-lg"></i> ફાઇનલ અપડેટ & ફી મેસેજ
                     </button>
-                    <button onclick="openCustomerProfile('${c.id}')" class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 px-3.5 rounded-xl text-xs sm:text-sm">
+                    <button onclick="openCustomerProfile('${c.id}')" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold py-3 px-3.5 rounded-xl text-xs sm:text-sm transition">
                         પ્રોફાઇલ
                     </button>
                 </div>
             </div>`;
-        }).join('');
+        }).join('') + (remainingFinal > 0 ? `
+            <div class="col-span-full flex justify-center py-4">
+                <button onclick="loadMoreFinalFollowups()" class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md">
+                    વધુ ${remainingFinal} લીડ્સ જુઓ (Load More)
+                </button>
+            </div>
+        ` : '');
+    };
+
+    window.loadMoreFinalFollowups = () => {
+        finalRenderLimit += PAGE_BATCH_SIZE;
+        renderFinalFollowupView();
+    };
+
+    window.toggleFinalDataCleanupPanel = () => {
+        const panel = document.getElementById('finalDataCleanupPanel');
+        if (panel) panel.classList.toggle('hidden');
+    };
+
+    // Final Reviewer Exclusive: Duplicate & Imported Batch Cleanup Functions
+    const getDuplicateLeadsList = () => {
+        const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
+        const seenPhones = new Map();
+        const duplicates = [];
+
+        // Keep leads that have higher progress (completed/second/final) and mark redundant fresh ones as duplicate
+        const sortedForRetention = [...activeCustomers].sort((a, b) => {
+            const score = (x) => (x.finalFollowupNotes ? 4 : 0) + (x.secondFollowupStage === 'closed_to_final' ? 3 : 0) + (x.callCompletionState === 'completed' ? 2 : 0);
+            return score(b) - score(a);
+        });
+
+        sortedForRetention.forEach(c => {
+            const cleanP = String(c.phone || '').replace(/\D/g, '').slice(-10);
+            if (!cleanP) return;
+            if (seenPhones.has(cleanP)) {
+                duplicates.push(c);
+            } else {
+                seenPhones.set(cleanP, c.id);
+            }
+        });
+        return duplicates;
+    };
+
+    const renderFinalImportAndDuplicateCleanupManager = () => {
+        const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
+        const dupList = getDuplicateLeadsList();
+        const pendingImported = activeCustomers.filter(c => c.source === 'Excel Import' && c.callCompletionState === 'pending');
+
+        const dupBadge = document.getElementById('dupCountBadge');
+        if (dupBadge) dupBadge.innerText = dupList.length;
+
+        const impBadge = document.getElementById('importedPendingCountBadge');
+        if (impBadge) impBadge.innerText = pendingImported.length;
+
+        const batchBox = document.getElementById('importedBatchesList');
+        if (!batchBox) return;
+
+        // Group imported leads by importBatchId (or date for older imports)
+        const groups = new Map();
+        activeCustomers.filter(c => c.source === 'Excel Import').forEach(c => {
+            const key = c.importBatchId || `LEGACY_${getDateKey(c.created) || 'OLD'}`;
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    key,
+                    fileName: c.importFileName || `એક્સેલ ઈમ્પોર્ટ (${getDateKey(c.created) || 'જૂનો ડેટા'})`,
+                    time: c.importBatchTime || c.created,
+                    total: 0,
+                    pending: 0
+                });
+            }
+            const g = groups.get(key);
+            g.total++;
+            if (c.callCompletionState === 'pending') g.pending++;
+        });
+
+        const groupArr = Array.from(groups.values());
+        if (groupArr.length === 0) {
+            batchBox.innerHTML = `<div class="col-span-full text-xs text-slate-400 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-center">કોઈ એક્સેલ ઈમ્પોર્ટ બેચ મળી નથી.</div>`;
+            return;
+        }
+
+        batchBox.innerHTML = groupArr.map(g => `
+            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="font-extrabold text-xs text-slate-800 dark:text-white truncate">📄 ${g.fileName}</div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">કુલ: <b>${g.total}</b> | બાકી કોલ: <b class="text-amber-600">${g.pending}</b></div>
+                </div>
+                <button onclick="deleteImportedBatchByKey('${g.key}')" class="px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 font-extrabold text-xs shrink-0 flex items-center gap-1">
+                    <i class="ph-bold ph-trash"></i> ડિલીટ
+                </button>
+            </div>
+        `).join('');
+    };
+
+    window.deleteDuplicatePhoneLeads = () => {
+        if (!isFinalFollowupUnlocked) return showAlert("ફક્ત ફાઇનલ રિવ્યુઅર જ ડુપ્લિકેટ ડેટા ડિલીટ કરી શકે છે.");
+        const dupList = getDuplicateLeadsList();
+        if (dupList.length === 0) {
+            return showAlert("કોઈ ડુપ્લિકેટ મોબાઈલ નંબર મળ્યો નથી!");
+        }
+        showConfirmModal(`સરખા મોબાઈલ નંબરવાળી ${dupList.length} ડુપ્લિકેટ લીડ્સ મળી છે. શું તમે તેને ડિલીટ કરવા માંગો છો?`, async () => {
+            const dupIds = new Set(dupList.map(d => d.id));
+            const modified = [];
+            extendedCRM.customers.forEach(c => {
+                if (dupIds.has(c.id)) {
+                    c.isDeleted = true;
+                    c.updated = new Date().toISOString();
+                    modified.push(c);
+                }
+            });
+            persistLocalCRM(true);
+            renderFinalFollowupView();
+            renderCustomersList();
+            renderFollowupsList();
+            updateDashboardStats();
+            customToast(`${modified.length} ડુપ્લિકેટ નંબરવાળી લીડ્સ ડિલીટ થઈ ગઈ!`);
+            setTimeout(() => saveMultipleCustomersToCloud(modified), 80);
+        });
+    };
+
+    window.deleteImportedBatchByKey = (batchKey) => {
+        if (!isFinalFollowupUnlocked) return showAlert("ફક્ત ફાઇનલ રિવ્યુઅર જ ઈમ્પોર્ટ ડેટા ડિલીટ કરી શકે છે.");
+        const targets = extendedCRM.customers.filter(c => !c.isDeleted && c.source === 'Excel Import' && (c.importBatchId === batchKey || `LEGACY_${getDateKey(c.created) || 'OLD'}` === batchKey));
+        if (targets.length === 0) return;
+
+        showConfirmModal(`શું તમે આ ઈમ્પોર્ટ બેચની તમામ ${targets.length} લીડ્સ ડિલીટ કરવા માંગો છો?`, async () => {
+            targets.forEach(c => {
+                c.isDeleted = true;
+                c.updated = new Date().toISOString();
+            });
+            persistLocalCRM(true);
+            renderFinalFollowupView();
+            renderCustomersList();
+            renderFollowupsList();
+            updateDashboardStats();
+            customToast(`ઈમ્પોર્ટ બેચની ${targets.length} લીડ્સ ડિલીટ કરવામાં આવી!`);
+            setTimeout(() => saveMultipleCustomersToCloud(targets), 80);
+        });
+    };
+
+    window.deleteAllPendingImportedLeads = () => {
+        if (!isFinalFollowupUnlocked) return showAlert("ફક્ત ફાઇનલ રિવ્યુઅર જ ઈમ્પોર્ટ ડેટા ડિલીટ કરી શકે છે.");
+        const targets = extendedCRM.customers.filter(c => !c.isDeleted && c.source === 'Excel Import' && c.callCompletionState === 'pending');
+        if (targets.length === 0) return showAlert("ડિલીટ કરવા માટે કોઈ ફ્રેશ/પેન્ડિંગ ઈમ્પોર્ટ ડેટા નથી.");
+
+        showConfirmModal(`શું તમે એક્સેલમાંથી ઈમ્પોર્ટ કરેલ તમામ ${targets.length} બાકી (Pending) લીડ્સ ડિલીટ કરવા માંગો છો?`, async () => {
+            targets.forEach(c => {
+                c.isDeleted = true;
+                c.updated = new Date().toISOString();
+            });
+            persistLocalCRM(true);
+            renderFinalFollowupView();
+            renderCustomersList();
+            renderFollowupsList();
+            updateDashboardStats();
+            customToast(`${targets.length} ઈમ્પોર્ટ કરેલ પેન્ડિંગ લીડ્સ ડિલીટ થઈ ગઈ!`);
+            setTimeout(() => saveMultipleCustomersToCloud(targets), 80);
+        });
     };
 
     window.toggleFinalAnalyticsPanel = () => {
@@ -3129,72 +3501,144 @@ service cloud.firestore {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
 
+    const ensureFinalChartDatesInitialized = () => {
+        const startEl = document.getElementById('finalChartStartDate');
+        const endEl = document.getElementById('finalChartEndDate');
+        if (!startEl || !endEl) return;
+        if (!endEl.value) {
+            endEl.value = getDateKey(new Date());
+        }
+        if (!startEl.value) {
+            const d = new Date();
+            d.setDate(d.getDate() - 6);
+            startEl.value = getDateKey(d);
+        }
+    };
+
+    window.setFinalChartQuickRange = (daysBack = 6) => {
+        const startEl = document.getElementById('finalChartStartDate');
+        const endEl = document.getElementById('finalChartEndDate');
+        if (!startEl || !endEl) return;
+        const endD = new Date();
+        const startD = new Date();
+        startD.setDate(endD.getDate() - daysBack);
+        endEl.value = getDateKey(endD);
+        startEl.value = getDateKey(startD);
+        finalRenderLimit = PAGE_BATCH_SIZE;
+        renderFinalFollowupView();
+    };
+
+    window.onFinalChartDateChange = () => {
+        const startEl = document.getElementById('finalChartStartDate');
+        const endEl = document.getElementById('finalChartEndDate');
+        if (startEl && endEl && startEl.value && endEl.value && startEl.value > endEl.value) {
+            startEl.value = endEl.value;
+        }
+        finalRenderLimit = PAGE_BATCH_SIZE;
+        renderFinalFollowupView();
+    };
+
+    // Click a specific date bar inside Final Review chart to filter single date
+    window.selectSingleDateInFinalChart = (dateKeyStr) => {
+        const startEl = document.getElementById('finalChartStartDate');
+        const endEl = document.getElementById('finalChartEndDate');
+        const toggleEl = document.getElementById('filterFinalCardsByDateToggle');
+        if (startEl && endEl) {
+            startEl.value = dateKeyStr;
+            endEl.value = dateKeyStr;
+        }
+        if (toggleEl) toggleEl.checked = true;
+        finalRenderLimit = PAGE_BATCH_SIZE;
+        renderFinalFollowupView();
+        customToast(`તારીખ ${dateKeyStr} મુજબ રિપોર્ટ ફિલ્ટર થયો!`);
+    };
+
     const renderFinalCallerStatisticsAndChart = () => {
+        ensureFinalChartDatesInitialized();
         const activeCustomers = extendedCRM.customers.filter(c => !c.isDeleted);
-        const todayKey = getDateKey(new Date());
+        const startKey = document.getElementById('finalChartStartDate')?.value || getDateKey(new Date());
+        const endKey = document.getElementById('finalChartEndDate')?.value || getDateKey(new Date());
+
+        const inSelectedRange = (isoStr) => {
+            const k = getDateKey(isoStr);
+            return k && k >= startKey && k <= endKey;
+        };
 
         const firstCompletedAll = activeCustomers.filter(c => c.callCompletionState === 'completed');
-        const firstCompletedToday = firstCompletedAll.filter(c => getDateKey(c.firstCallerAt || c.updated) === todayKey);
+        const firstCompletedRange = firstCompletedAll.filter(c => inSelectedRange(c.firstCallerAt || c.updated));
 
         const secondClosedAll = activeCustomers.filter(c => c.secondFollowupStage === 'closed_to_final');
-        const secondClosedToday = secondClosedAll.filter(c => getDateKey(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated) === todayKey);
+        const secondClosedRange = secondClosedAll.filter(c => inSelectedRange(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated));
 
         const finalClosedAll = activeCustomers.filter(c => c.finalFollowupNotes && c.finalFollowupNotes.trim() !== '');
-        const finalClosedToday = finalClosedAll.filter(c => getDateKey(c.finalCallerAt || c.updated) === todayKey);
+        const finalClosedRange = finalClosedAll.filter(c => inSelectedRange(c.finalCallerAt || c.updated));
 
-        let totalLogs = 0;
-        Object.values(extendedCRM.timeline || {}).forEach(arr => { totalLogs += (arr ? arr.length : 0); });
+        const totalRangeActions = firstCompletedRange.length + secondClosedRange.length + finalClosedRange.length;
 
         const elF1 = document.getElementById('finStatFirstCaller');
-        if (elF1) elF1.innerText = `${firstCompletedToday.length} / ${firstCompletedAll.length}`;
+        if (elF1) elF1.innerText = `${firstCompletedRange.length} / ${firstCompletedAll.length}`;
         const elF2 = document.getElementById('finStatSecondCaller');
-        if (elF2) elF2.innerText = `${secondClosedToday.length} / ${secondClosedAll.length}`;
+        if (elF2) elF2.innerText = `${secondClosedRange.length} / ${secondClosedAll.length}`;
         const elF3 = document.getElementById('finStatFinalCaller');
-        if (elF3) elF3.innerText = `${finalClosedToday.length} / ${finalClosedAll.length}`;
+        if (elF3) elF3.innerText = `${finalClosedRange.length} / ${finalClosedAll.length}`;
         const elLogs = document.getElementById('finStatTotalLogs');
-        if (elLogs) elLogs.innerText = totalLogs;
+        if (elLogs) elLogs.innerText = totalRangeActions;
 
-        // Build Last 7 Days Daily Chart
+        const rangeTitleEl = document.getElementById('finalChartRangeTitle');
+        if (rangeTitleEl) {
+            rangeTitleEl.innerText = `📅 દૈનિક ચાર્ટ (${startKey} થી ${endKey}) • કોઈપણ તારીખ પર ક્લિક કરીને તે દિવસની લીડ્સ જુઓ`;
+        }
+
+        // Build Date-Wise Daily Chart between startKey and endKey (up to 31 days)
         const chartBox = document.getElementById('finalDailyChartContainer');
         if (!chartBox) return;
 
         const days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const key = getDateKey(d);
-            const label = d.toLocaleDateString('gu-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        const startDateObj = new Date(startKey + "T00:00:00");
+        const endDateObj = new Date(endKey + "T00:00:00");
+        if (!isNaN(startDateObj.getTime()) && !isNaN(endDateObj.getTime())) {
+            const diffDays = Math.min(31, Math.max(0, Math.round((endDateObj - startDateObj) / (1000 * 60 * 60 * 24))));
+            for (let i = diffDays; i >= 0; i--) {
+                const d = new Date(endDateObj);
+                d.setDate(endDateObj.getDate() - i);
+                const key = getDateKey(d);
+                const label = d.toLocaleDateString('gu-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 
-            const c1 = firstCompletedAll.filter(c => getDateKey(c.firstCallerAt || c.updated) === key).length;
-            const c2 = secondClosedAll.filter(c => getDateKey(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated) === key).length;
-            const c3 = finalClosedAll.filter(c => getDateKey(c.finalCallerAt || c.updated) === key).length;
-            days.push({ key, label, c1, c2, c3 });
+                const c1 = firstCompletedAll.filter(c => getDateKey(c.firstCallerAt || c.updated) === key).length;
+                const c2 = secondClosedAll.filter(c => getDateKey(c.secondCallerAt || (c.secondFollowupData && c.secondFollowupData.closedAt) || c.updated) === key).length;
+                const c3 = finalClosedAll.filter(c => getDateKey(c.finalCallerAt || c.updated) === key).length;
+                days.push({ key, label, c1, c2, c3 });
+            }
         }
 
-        const maxVal = Math.max(5, ...days.map(d => Math.max(d.c1, d.c2, d.c3)));
+        const maxVal = Math.max(4, ...days.map(d => Math.max(d.c1, d.c2, d.c3)));
 
         chartBox.innerHTML = days.map(d => {
             const h1 = Math.round((d.c1 / maxVal) * 100);
             const h2 = Math.round((d.c2 / maxVal) * 100);
             const h3 = Math.round((d.c3 / maxVal) * 100);
+            const isSingleSelected = (startKey === endKey && startKey === d.key);
             return `
-            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-                <div class="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 text-center mb-2">${d.label}</div>
-                <div class="h-24 flex items-end justify-center gap-2 px-2 border-b border-slate-200 dark:border-slate-700 pb-1">
+            <div onclick="selectSingleDateInFinalChart('${d.key}')" class="bg-white dark:bg-slate-800 p-3 rounded-xl border ${isSingleSelected ? 'border-purple-500 ring-2 ring-purple-400/30' : 'border-slate-200 dark:border-slate-700'} flex flex-col justify-between cursor-pointer hover:border-purple-400 transition">
+                <div class="flex items-center justify-between gap-1 mb-2">
+                    <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-200 truncate">${d.label}</span>
+                    <span class="text-[9px] font-mono text-slate-400">${d.key.slice(5)}</span>
+                </div>
+                <div class="h-24 flex items-end justify-center gap-2 px-1.5 border-b border-slate-200 dark:border-slate-700 pb-1">
                     <div class="flex flex-col items-center flex-1 h-full justify-end">
                         <span class="text-[10px] font-extrabold text-blue-600 mb-0.5">${d.c1}</span>
-                        <div class="w-full bg-blue-500 rounded-t-md transition-all" style="height: ${Math.max(8, h1)}%" title="1st Caller: ${d.c1}"></div>
+                        <div class="w-full bg-blue-500 rounded-t-md transition-all" style="height: ${d.c1 > 0 ? Math.max(12, h1) : 4}%" title="1st Caller: ${d.c1}"></div>
                     </div>
                     <div class="flex flex-col items-center flex-1 h-full justify-end">
                         <span class="text-[10px] font-extrabold text-amber-600 mb-0.5">${d.c2}</span>
-                        <div class="w-full bg-amber-500 rounded-t-md transition-all" style="height: ${Math.max(8, h2)}%" title="2nd Caller Close: ${d.c2}"></div>
+                        <div class="w-full bg-amber-500 rounded-t-md transition-all" style="height: ${d.c2 > 0 ? Math.max(12, h2) : 4}%" title="2nd Caller Close: ${d.c2}"></div>
                     </div>
                     <div class="flex flex-col items-center flex-1 h-full justify-end">
                         <span class="text-[10px] font-extrabold text-emerald-600 mb-0.5">${d.c3}</span>
-                        <div class="w-full bg-emerald-500 rounded-t-md transition-all" style="height: ${Math.max(8, h3)}%" title="Final Close: ${d.c3}"></div>
+                        <div class="w-full bg-emerald-500 rounded-t-md transition-all" style="height: ${d.c3 > 0 ? Math.max(12, h3) : 4}%" title="Final Close: ${d.c3}"></div>
                     </div>
                 </div>
-                <div class="mt-1.5 text-[10px] text-center font-bold text-slate-400">1st: ${d.c1} | 2nd: ${d.c2} | Fin: ${d.c3}</div>
+                <div class="mt-1.5 text-[10px] text-center font-bold text-slate-500">1st: <b>${d.c1}</b> | 2nd: <b>${d.c2}</b> | Fin: <b>${d.c3}</b></div>
             </div>`;
         }).join('');
     };
@@ -3463,42 +3907,87 @@ service cloud.firestore {
         const sbFollowup = document.getElementById('sidebarFollowupBadge');
         if (sbFollowup) sbFollowup.innerText = activeCustomers.filter(c => (c.followUpType && c.followUpType !== 'None') || c.followup).length;
 
-        // Render 1st Caller Daily Report on Main Dashboard (Strictly 1st Caller only - 2nd Caller is kept private)
-        const todayKey = getDateKey(new Date());
+        // Render 1st Caller Date-Wise Daily Report on Main Dashboard (Strictly 1st Caller only - 2nd Caller is kept private)
+        const dashDateInput = document.getElementById('dashReportDateFilter');
+        if (dashDateInput && !dashDateInput.value) {
+            dashDateInput.value = getDateKey(new Date());
+        }
+        const selectedDateKey = (dashDateInput && dashDateInput.value) ? dashDateInput.value : getDateKey(new Date());
+
         const firstCallerCompleted = activeCustomers.filter(c => c.callCompletionState === 'completed');
-        const firstCallerToday = firstCallerCompleted.filter(c => getDateKey(c.firstCallerAt || c.updated) === todayKey);
+        const firstCallerOnSelectedDate = firstCallerCompleted.filter(c => getDateKey(c.firstCallerAt || c.updated) === selectedDateKey);
 
         const dashTodayEl = document.getElementById('dashFirstCallerTodayCount');
-        if (dashTodayEl) dashTodayEl.innerText = firstCallerToday.length;
+        if (dashTodayEl) dashTodayEl.innerText = firstCallerOnSelectedDate.length;
         const dashTotalEl = document.getElementById('dashFirstCallerTotalCount');
         if (dashTotalEl) dashTotalEl.innerText = firstCallerCompleted.length;
 
+        // Summary box for selected date on Dashboard
+        const summaryBox = document.getElementById('dashSelectedDateSummaryBox');
+        if (summaryBox) {
+            const interestedOnDate = firstCallerOnSelectedDate.filter(c => (c.status || '').includes('interested') || c.status === 'admission').length;
+            const meetOnDate = firstCallerOnSelectedDate.filter(c => c.followUpType === 'Physical Meet' || c.followUpType === 'Demo Class').length;
+            const sortedCalls = [...firstCallerOnSelectedDate].sort((a, b) => new Date(a.firstCallerAt || a.updated) - new Date(b.firstCallerAt || b.updated));
+            const firstCallTime = sortedCalls[0] ? new Date(sortedCalls[0].firstCallerAt || sortedCalls[0].updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+            const lastCallTime = sortedCalls.length > 0 ? new Date(sortedCalls[sortedCalls.length - 1].firstCallerAt || sortedCalls[sortedCalls.length - 1].updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+
+            summaryBox.innerHTML = `
+                <div class="flex items-center gap-2 font-extrabold text-slate-800 dark:text-white">
+                    <span class="px-2.5 py-1 rounded-lg bg-brand-500 text-white">📅 ${selectedDateKey}</span>
+                    <span>પૂર્ણ કોલ્સ: <b class="text-brand-600 dark:text-brand-400">${firstCallerOnSelectedDate.length}</b></span>
+                    <span>• રસ ધરાવતા (Interested): <b class="text-emerald-600">${interestedOnDate}</b></span>
+                    <span>• મિટિંગ/ડેમો ફિક્સ: <b class="text-purple-600">${meetOnDate}</b></span>
+                </div>
+                <div class="text-slate-500 font-bold">
+                    🕒 પહેલો કોલ: <b>${firstCallTime}</b> | છેલ્લો કોલ: <b>${lastCallTime}</b>
+                </div>
+            `;
+        }
+
         const dashBarsEl = document.getElementById('dashFirstCallerDailyBars');
         if (dashBarsEl) {
+            const baseDate = new Date(selectedDateKey + "T00:00:00");
+            const refDate = isNaN(baseDate.getTime()) ? new Date() : baseDate;
             const days = [];
             for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
+                const d = new Date(refDate);
+                d.setDate(refDate.getDate() - i);
                 const key = getDateKey(d);
                 const label = d.toLocaleDateString('gu-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-                const completedCount = firstCallerCompleted.filter(c => getDateKey(c.firstCallerAt || c.updated) === key).length;
-                const latestCall = firstCallerCompleted
-                    .filter(c => getDateKey(c.firstCallerAt || c.updated) === key)
-                    .sort((a, b) => new Date(b.firstCallerAt || b.updated) - new Date(a.firstCallerAt || a.updated))[0];
+                const dayCalls = firstCallerCompleted.filter(c => getDateKey(c.firstCallerAt || c.updated) === key);
+                const completedCount = dayCalls.length;
+                const latestCall = dayCalls.sort((a, b) => new Date(b.firstCallerAt || b.updated) - new Date(a.firstCallerAt || a.updated))[0];
                 const lastTimeStr = latestCall ? new Date(latestCall.firstCallerAt || latestCall.updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
-                days.push({ label, completedCount, lastTimeStr });
+                days.push({ key, label, completedCount, lastTimeStr });
             }
-            dashBarsEl.innerHTML = days.map(d => `
-                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-                    <span class="text-[11px] font-bold text-slate-500">${d.label}</span>
+            dashBarsEl.innerHTML = days.map(d => {
+                const isSelected = d.key === selectedDateKey;
+                return `
+                <div onclick="selectDashReportDate('${d.key}')" class="p-3 rounded-2xl ${isSelected ? 'bg-brand-50 dark:bg-brand-950/40 border-2 border-brand-500' : 'bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700'} flex flex-col justify-between cursor-pointer hover:border-brand-400 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">${d.label}</span>
+                        <span class="text-[9px] font-mono text-slate-400">${d.key.slice(5)}</span>
+                    </div>
                     <div class="my-1.5 flex items-baseline justify-between">
                         <span class="text-xl font-extrabold text-brand-600 dark:text-brand-400">${d.completedCount}</span>
                         <span class="text-[10px] font-bold text-slate-400">કોલ્સ પૂર્ણ</span>
                     </div>
-                    <div class="text-[10px] text-slate-500 font-medium truncate">🕒 છેલ્લો કોલ: ${d.lastTimeStr}</div>
+                    <div class="text-[10px] text-slate-500 font-medium truncate">🕒 છેલ્લો: ${d.lastTimeStr}</div>
                 </div>
-            `).join('');
+            `}).join('');
         }
+    };
+
+    window.selectDashReportDate = (dateKeyStr) => {
+        const dashDateInput = document.getElementById('dashReportDateFilter');
+        if (dashDateInput) dashDateInput.value = dateKeyStr;
+        updateDashboardStats();
+    };
+
+    window.resetDashDateToToday = () => {
+        const dashDateInput = document.getElementById('dashReportDateFilter');
+        if (dashDateInput) dashDateInput.value = getDateKey(new Date());
+        updateDashboardStats();
     };
 
     window.openPendingCallsFromDash = () => {
@@ -3513,6 +4002,7 @@ service cloud.firestore {
 
     window.setCustomerCallTab = (tabName) => {
         activeCustomerCallTab = tabName;
+        customersRenderLimit = PAGE_BATCH_SIZE;
         document.querySelectorAll('.call-tab-btn').forEach(btn => {
             btn.classList.remove('bg-brand-500', 'text-white');
             btn.classList.add('text-slate-600', 'dark:text-slate-300');
@@ -3551,9 +4041,17 @@ service cloud.firestore {
 
         const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
         const statusF = document.getElementById('filterStatus')?.value || 'all';
+        const dateF = document.getElementById('filterCustomerDate')?.value || '';
 
         if (statusF === 'interested') activeCustomers = activeCustomers.filter(c => c.status.includes('interested'));
         else if (statusF !== 'all') activeCustomers = activeCustomers.filter(c => c.status === statusF);
+
+        if (dateF) {
+            activeCustomers = activeCustomers.filter(c => {
+                const callDateKey = getDateKey(c.firstCallerAt || c.updated || c.created);
+                return callDateKey === dateF;
+            });
+        }
 
         if (q) {
             activeCustomers = activeCustomers.filter(c => 
@@ -3573,32 +4071,44 @@ service cloud.firestore {
             return;
         }
 
-        grid.innerHTML = activeCustomers.map(c => {
+        const visibleCustomers = activeCustomers.slice(0, customersRenderLimit);
+        const remainingCount = activeCustomers.length - visibleCustomers.length;
+
+        grid.innerHTML = visibleCustomers.map(c => {
             const isCompleted = c.callCompletionState === 'completed';
+            const topBarColor = isCompleted
+                ? 'from-emerald-500 via-teal-500 to-cyan-500'
+                : 'from-amber-400 via-orange-500 to-rose-500';
             const callBadge = isCompleted 
-                ? `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">✅ પૂર્ણ કોલ</span>`
-                : `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300">⏳ બાકી • ${c.pendingSubTag || 'Fresh'}</span>`;
+                ? `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">✅ પૂર્ણ કોલ</span>`
+                : `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">⏳ બાકી • ${c.pendingSubTag || 'Fresh'}</span>`;
 
             return `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between hover:shadow-md transition">
+            <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-slate-200/90 dark:border-slate-700/80 p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${topBarColor}"></div>
                 <div>
-                    <div class="flex justify-between items-start gap-2 mb-2">
-                        <div class="min-w-0">
-                            <h3 onclick="window.openCustomerProfile('${c.id}')" class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate cursor-pointer hover:text-brand-600">${c.name}</h3>
-                            <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
+                    <div class="flex justify-between items-start gap-2 mb-2.5 mt-1">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-extrabold text-sm flex items-center justify-center shrink-0 shadow-sm">
+                                ${(c.name || 'S').charAt(0).toUpperCase()}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 onclick="window.openCustomerProfile('${c.id}')" class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug truncate cursor-pointer hover:text-emerald-600 transition">${c.name}</h3>
+                                <p class="text-sm font-mono font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5">📞 ${c.phone} ${c.edu ? `<span class="text-slate-500 dark:text-slate-400 font-sans font-bold">• STD: ${c.edu}</span>` : ''}</p>
+                            </div>
                         </div>
-                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
+                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 shrink-0">${c.leadId}</span>
                     </div>
                     <div class="flex flex-wrap gap-1.5 mb-2.5">
                         ${callBadge}
-                        <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-50 dark:bg-slate-700 text-blue-700 dark:text-slate-200">🎓 ${c.course}</span>
-                        ${(c.areaInfo || c.city) ? `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">📍 ${c.areaInfo || c.city}</span>` : ''}
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">🎓 ${c.course}</span>
+                        ${(c.areaInfo || c.city) ? `<span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">📍 ${c.areaInfo || c.city}</span>` : ''}
                     </div>
-                    ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl mb-3 line-clamp-2">📝 ${c.firstFollowupNotes}</p>` : ''}
+                    ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/70 p-2.5 rounded-xl mb-3 border border-slate-200/60 dark:border-slate-700 line-clamp-2">📝 ${c.firstFollowupNotes}</p>` : ''}
                 </div>
 
                 <div class="grid grid-cols-4 gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-700/60">
-                    <button onclick="window.triggerDirectCall('${c.id}')" class="col-span-2 bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs sm:text-sm shadow-sm">
+                    <button onclick="window.triggerDirectCall('${c.id}')" class="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs sm:text-sm shadow-md shadow-emerald-500/20">
                         <i class="ph-fill ph-phone-call text-base"></i> ડાયરેક્ટ કોલ
                     </button>
                     <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-extrabold py-2.5 rounded-xl transition flex items-center justify-center text-sm" title="કોલ રિપોર્ટ અપડેટ">
@@ -3609,12 +4119,24 @@ service cloud.firestore {
                     </button>
                 </div>
             </div>`;
-        }).join('');
+        }).join('') + (remainingCount > 0 ? `
+            <div class="col-span-full flex justify-center py-4">
+                <button onclick="loadMoreCustomers()" class="px-6 py-3 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs sm:text-sm shadow-md flex items-center gap-2">
+                    <i class="ph-bold ph-arrow-circle-down text-lg"></i> વધુ ${remainingCount} કસ્ટમર જુઓ (Load More)
+                </button>
+            </div>
+        ` : '');
+    };
+
+    window.loadMoreCustomers = () => {
+        customersRenderLimit += PAGE_BATCH_SIZE;
+        renderCustomersList();
     };
 
     // 1. FIRST FOLLOW-UP TAB RENDER
     window.setFollowupFilter = (filterName) => {
         activeFollowupFilter = filterName;
+        followupsRenderLimit = PAGE_BATCH_SIZE;
         const sel = document.getElementById('firstFollowupTypeSelect');
         if (sel && sel.value !== filterName) sel.value = filterName;
         renderFollowupsList();
@@ -3622,6 +4144,7 @@ service cloud.firestore {
 
     window.setFirstFollowupCourseFilter = (courseKey) => {
         activeFirstCourseFilter = courseKey;
+        followupsRenderLimit = PAGE_BATCH_SIZE;
         const sel = document.getElementById('firstFollowupCourseSelect');
         if (sel && sel.value !== courseKey) sel.value = courseKey;
         renderFollowupsList();
@@ -3656,32 +4179,47 @@ service cloud.firestore {
             return;
         }
 
-        grid.innerHTML = filtered.map(c => `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between hover:shadow-md transition">
+        const visibleFollowups = filtered.slice(0, followupsRenderLimit);
+        const remainingFollowups = filtered.length - visibleFollowups.length;
+
+        grid.innerHTML = visibleFollowups.map(c => `
+            <div class="crm-card bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-purple-200/90 dark:border-purple-800/60 p-4 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
                 <div>
-                    <div class="flex justify-between items-start gap-2 mb-2">
+                    <div class="flex justify-between items-start gap-2 mb-2 mt-1">
                         <div class="flex flex-wrap gap-1.5">
-                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-purple-100 text-purple-800">${c.followUpType || 'Follow Up'}</span>
-                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800">🎓 ${c.course}</span>
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm">${c.followUpType || 'Follow Up'}</span>
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">🎓 ${c.course}</span>
                         </div>
-                        <span class="text-xs font-bold text-slate-400 shrink-0">${c.leadId}</span>
+                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 shrink-0">${c.leadId}</span>
                     </div>
                     <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-snug">${c.name}</h3>
-                    <p class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5 mb-2">📞 ${c.phone} ${c.edu ? `• STD: ${c.edu}` : ''}</p>
-                    ${(c.areaInfo || c.city) ? `<div class="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1.5">📍 એરિયા: ${c.areaInfo || c.city}</div>` : ''}
-                    ${c.followup ? `<div class="text-xs font-bold text-purple-600 dark:text-purple-400 mb-2">⏰ સમય: ${new Date(c.followup).toLocaleString()}</div>` : ''}
-                    ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl mb-3">📝 ${c.firstFollowupNotes}</p>` : ''}
+                    <p class="text-sm font-mono font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5 mb-2">📞 ${c.phone} ${c.edu ? `<span class="text-slate-500 font-sans">• STD: ${c.edu}</span>` : ''}</p>
+                    ${(c.areaInfo || c.city) ? `<div class="text-xs font-extrabold text-blue-600 dark:text-blue-400 mb-1.5">📍 એરિયા: ${c.areaInfo || c.city}</div>` : ''}
+                    ${c.followup ? `<div class="text-xs font-extrabold text-purple-600 dark:text-purple-400 mb-2">⏰ સમય: ${new Date(c.followup).toLocaleString()}</div>` : ''}
+                    ${c.firstFollowupNotes ? `<p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 bg-purple-50/60 dark:bg-slate-900 p-3 rounded-xl mb-3 border border-purple-200/60 dark:border-slate-700">📝 ${c.firstFollowupNotes}</p>` : ''}
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.triggerDirectCall('${c.id}')" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm">
+                    <button onclick="window.triggerDirectCall('${c.id}')" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition">
                         <i class="ph-fill ph-phone-call text-base"></i> કોલ કરો
                     </button>
-                    <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 font-extrabold py-2.5 px-4 rounded-xl text-xs sm:text-sm">
+                    <button onclick="window.openPostCallModal('${c.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-extrabold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition">
                         અપડેટ
                     </button>
                 </div>
             </div>
-        `).join('');
+        `).join('') + (remainingFollowups > 0 ? `
+            <div class="col-span-full flex justify-center py-4">
+                <button onclick="loadMoreFollowups()" class="px-6 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md">
+                    વધુ ${remainingFollowups} ફોલો-અપ જુઓ (Load More)
+                </button>
+            </div>
+        ` : '');
+    };
+
+    window.loadMoreFollowups = () => {
+        followupsRenderLimit += PAGE_BATCH_SIZE;
+        renderFollowupsList();
     };
 
     window.softDeleteProfile = () => {
